@@ -50,12 +50,32 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kfBP = [0., 5., 10., 20., 30.]
     ret.longitudinalTuning.kfV = [1., 1., 1., 1., 1.]
 
-    ret.lateralTuning.pid.kpBP = [0., 9., 17., 28.]
-    ret.lateralTuning.pid.kpV = [0.05, 0.10, 0.15, 0.20]
-    ret.lateralTuning.pid.kiBP = [0., 9., 17., 28.]
-    ret.lateralTuning.pid.kiV = [0.01, 0.02, 0.03, 0.04]
-    ret.lateralTuning.pid.kfBP = [0., 9., 17., 28.]
-    ret.lateralTuning.pid.kfV = [0.00005, 0.00005, 0.00005, 0.00005]
+    #PID START
+    #ret.lateralTuning.pid.kpBP = [0., 9., 17., 28.]
+    #ret.lateralTuning.pid.kpV = [0.05, 0.10, 0.15, 0.20]
+    #ret.lateralTuning.pid.kiBP = [0., 9., 17., 28.]
+    #ret.lateralTuning.pid.kiV = [0.01, 0.02, 0.03, 0.04]
+    #ret.lateralTuning.pid.kfBP = [0., 9., 17., 28.]
+    #ret.lateralTuning.pid.kfV = [0.00005, 0.00005, 0.00005, 0.00005]
+    #PID END
+    
+    #LQR START
+    ret.lateralTuning.init('lqr')
+
+    ret.lateralTuning.lqr.scale = 1750.0
+    ret.lateralTuning.lqr.ki = 0.02
+
+    ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
+    ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
+    ret.lateralTuning.lqr.c = [1., 0.]
+    ret.lateralTuning.lqr.k = [-110., 451.]
+    ret.lateralTuning.lqr.l = [0.33, 0.318]
+    ret.lateralTuning.lqr.dcGain = 0.0028
+
+    ret.steerMaxBP = [0.]
+    ret.steerMaxV = [1.2]
+    #LQR END
+    
 
     if candidate in [CAR.SANTA_FE, CAR.SANTA_FE_2017]:
       ret.mass = 3982. * CV.LB_TO_KG + STD_CARGO_KG
@@ -119,7 +139,7 @@ class CarInterface(CarInterfaceBase):
     elif candidate in [CAR.KIA_OPTIMA, CAR.KIA_OPTIMA_HEV]:
       ret.mass = 3558. * CV.LB_TO_KG
       ret.wheelbase = 2.80
-      ret.steerRatio = 13.75 * 1.15
+      ret.steerRatio = 13.5
     elif candidate == CAR.KIA_STINGER:
       ret.mass = 1825. + STD_CARGO_KG
       ret.wheelbase = 2.78
