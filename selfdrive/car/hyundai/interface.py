@@ -293,8 +293,8 @@ class CarInterface(CarInterfaceBase):
         be.type = ButtonType.decelCruise
       elif but == Buttons.GAP_DIST:
         be.type = ButtonType.gapAdjustCruise
-      elif but == Buttons.CANCEL:
-        be.type = ButtonType.cancel
+      #elif but == Buttons.CANCEL:
+      #  be.type = ButtonType.cancel
       buttonEvents.append(be)
     if self.CS.cruise_main_button != self.CS.prev_cruise_main_button and self.CC.usestockscc:
       be = car.CarState.ButtonEvent.new_message()
