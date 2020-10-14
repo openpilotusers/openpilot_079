@@ -10,8 +10,8 @@ const CanMsg HYUNDAI_TX_MSGS[] = {
   {832, 0, 8},  // LKAS11 Bus 0
   {1265, 0, 4}, // CLU11 Bus 0
   {1157, 0, 4}, // LFAHDA_MFC Bus 0
-  // {1056, 0, 8}, //   SCC11,  Bus 0
-  // {1057, 0, 8}, //   SCC12,  Bus 0
+  {1056, 0, 8}, //   SCC11,  Bus 0
+  {1057, 0, 8}, //   SCC12,  Bus 0
   // {1290, 0, 8}, //   SCC13,  Bus 0
   // {905, 0, 8},  //   SCC14,  Bus 0
   // {1186, 0, 8}  //   4a2SCC, Bus 0
@@ -116,6 +116,18 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     if (addr == 1057) {
       // 2 bits: 13-14
       int cruise_engaged = (GET_BYTES_04(to_push) >> 13) & 0x3;
+      if (cruise_engaged && !cruise_engaged_prev) {
+        controls_allowed = 1;
+      }
+      if (!cruise_engaged) {
+        controls_allowed = 0;
+      }
+      cruise_engaged_prev = cruise_engaged;
+    }
+
+    if (addr == 1056) { // for cars without long control
+      // 2 bits: 13-14
+      int cruise_engaged = GET_BYTES_04(to_push) & 0x1; // ACC main_on signal
       if (cruise_engaged && !cruise_engaged_prev) {
         controls_allowed = 1;
       }
