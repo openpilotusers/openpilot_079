@@ -103,12 +103,12 @@ bool brake_pressed_prev = false;
 bool cruise_engaged_prev = false;
 float vehicle_speed = 0;
 bool vehicle_moving = false;
-bool hyundai_community_mdps_harness_present = false;
+bool hyundai_community_mdps_harness_present = true;
 
-//type = 0 is no mdps harness, type 0 if you want L-CAN on bus1
+//type = 0 is no mdps harness, type 0 is not necessary to set
 //type = 1 is mdps harness connected directly to can1 replacing lcan
 //type = 2 is mdps harness connected to obd/comma power
-int hyundai_community_mdps_harness_type = 0;
+int hyundai_community_mdps_harness_type = 1;
 
 
 // for safety modes with torque steering control
