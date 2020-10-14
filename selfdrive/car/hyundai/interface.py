@@ -51,29 +51,26 @@ class CarInterface(CarInterfaceBase):
     ret.longitudinalTuning.kfV = [1., 1., 1., 1., 1.]
 
     #PID START
-    #ret.lateralTuning.pid.kpBP = [0., 9., 17., 28.]
-    #ret.lateralTuning.pid.kpV = [0.05, 0.10, 0.15, 0.20]
-    #ret.lateralTuning.pid.kiBP = [0., 9., 17., 28.]
-    #ret.lateralTuning.pid.kiV = [0.01, 0.02, 0.03, 0.04]
-    #ret.lateralTuning.pid.kfBP = [0., 9., 17., 28.]
-    #ret.lateralTuning.pid.kfV = [0.00005, 0.00005, 0.00005, 0.00005]
+    ret.lateralTuning.pid.kpBP = [0., 9., 17., 28.]
+    ret.lateralTuning.pid.kpV = [0.05, 0.10, 0.15, 0.20]
+    ret.lateralTuning.pid.kiBP = [0., 9., 17., 28.]
+    ret.lateralTuning.pid.kiV = [0.01, 0.02, 0.03, 0.04]
+    ret.lateralTuning.pid.kfBP = [0., 9., 17., 28.]
+    ret.lateralTuning.pid.kfV = [0.00005, 0.00005, 0.00005, 0.00005]
     #PID END
     
     #LQR START
-    ret.lateralTuning.init('lqr')
-
-    ret.lateralTuning.lqr.scale = 1750.0
-    ret.lateralTuning.lqr.ki = 0.02
-
-    ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
-    ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
-    ret.lateralTuning.lqr.c = [1., 0.]
-    ret.lateralTuning.lqr.k = [-110., 451.]
-    ret.lateralTuning.lqr.l = [0.33, 0.318]
-    ret.lateralTuning.lqr.dcGain = 0.0028
-
-    ret.steerMaxBP = [0.]
-    ret.steerMaxV = [1.2]
+    #ret.lateralTuning.init('lqr')
+    #ret.lateralTuning.lqr.scale = 1750.0
+    #ret.lateralTuning.lqr.ki = 0.02
+    #ret.lateralTuning.lqr.a = [0., 1., -0.22619643, 1.21822268]
+    #ret.lateralTuning.lqr.b = [-1.92006585e-04, 3.95603032e-05]
+    #ret.lateralTuning.lqr.c = [1., 0.]
+    #ret.lateralTuning.lqr.k = [-110., 451.]
+    #ret.lateralTuning.lqr.l = [0.33, 0.318]
+    #ret.lateralTuning.lqr.dcGain = 0.0028
+    #ret.steerMaxBP = [0.]
+    #ret.steerMaxV = [1.2]
     #LQR END
     
 
@@ -223,8 +220,8 @@ class CarInterface(CarInterfaceBase):
                           CAR.KIA_CADENZA_HEV, CAR.GRANDEUR_HEV, CAR.KIA_NIRO_HEV, CAR.KONA_HEV]):
       ret.safetyModel = car.CarParams.SafetyModel.hyundaiCommunity
 
-    if ret.radarOffCan or (ret.sccBus == 2) or Params().get('EnableOPwithCC') == b'0':
-      ret.safetyModel = car.CarParams.SafetyModel.hyundaiCommunityNonscc
+    #if ret.radarOffCan or (ret.sccBus == 2) or Params().get('EnableOPwithCC') == b'0':
+    #  ret.safetyModel = car.CarParams.SafetyModel.hyundaiCommunityNonscc
 
     if ret.mdpsHarness:
       ret.minSteerSpeed = 0.
@@ -349,19 +346,18 @@ class CarInterface(CarInterfaceBase):
     ret.buttonEvents = self.buttonEvents
     
     # handle button press
-    if not self.CC.usestockscc:
-      for b in self.buttonEvents:
-        if b.type == ButtonType.decelCruise and b.pressed \
-                and (not ret.brakePressed or ret.standstill) and not self.CP.enableCruise:
-          events.add(EventName.buttonEnable)
-        if b.type == ButtonType.accelCruise and b.pressed \
-                and ((self.CC.setspeed > self.CC.clu11_speed - 2) or ret.standstill or self.CC.usestockscc) \
-                and not self.CP.enableCruise:
-          events.add(EventName.buttonEnable)
-        if b.type == ButtonType.cancel and b.pressed:
-          events.add(EventName.buttonCancel)
-        if b.type == ButtonType.altButton3 and b.pressed:
-          events.add(EventName.buttonCancel)
+    for b in self.buttonEvents:
+      if b.type == ButtonType.decelCruise and b.pressed \
+              and (not ret.brakePressed or ret.standstill) and not self.CP.enableCruise:
+        events.add(EventName.buttonEnable)
+      if b.type == ButtonType.accelCruise and b.pressed \
+              and ((self.CC.setspeed > self.CC.clu11_speed - 2) or ret.standstill or self.CC.usestockscc) \
+              and not self.CP.enableCruise:
+        events.add(EventName.buttonEnable)
+      if b.type == ButtonType.cancel and b.pressed:
+        events.add(EventName.buttonCancel)
+      if b.type == ButtonType.altButton3 and b.pressed:
+        events.add(EventName.buttonEnable)
 
 
     if self.CC.lanechange_manual_timer:
