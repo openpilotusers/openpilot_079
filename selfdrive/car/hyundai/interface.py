@@ -354,7 +354,7 @@ class CarInterface(CarInterfaceBase):
               and ((self.CC.setspeed > self.CC.clu11_speed - 2) or ret.standstill or self.CC.usestockscc) \
               and not self.CP.enableCruise:
         events.add(EventName.buttonEnable)
-      if b.type == ButtonType.cancel and b.pressed:
+      if b.type == ButtonType.cancel and b.pressed and not self.CC.usestockscc:
         events.add(EventName.buttonCancel)
       if b.type == ButtonType.altButton3 and b.pressed:
         events.add(EventName.buttonEnable)
