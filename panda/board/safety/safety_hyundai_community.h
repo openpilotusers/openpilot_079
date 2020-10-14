@@ -282,7 +282,7 @@ static int hyundai_community_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     }
 
     // reset to 0 if either controls is not allowed or there's a violation
-    if (violation || !controls_allowed) {
+    if (!controls_allowed) {
       desired_torque_last = 0;
       rt_torque_last = 0;
       ts_last = ts;
