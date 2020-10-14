@@ -19,9 +19,10 @@ int prev_desired_accel = 0;
 int decel_not_ramping = 0;
 
 const CanMsg HYUNDAI_COMMUNITY_TX_MSGS[] = {
-  {832, 0, 8}, {832, 1, 8},    // LKAS11 Bus 0, 1
-  {1265, 0, 4}, {1265, 1, 4},  // CLU11 Bus 0, 1
-  {1157, 0, 4},                 // LFAHDA_MFC Bus 0
+  {832, 0, 8}, {832, 1, 8}, // LKAS11 Bus 0, 1
+  {1265, 0, 4}, {1265, 1, 4}, // CLU11 Bus 0, 1, 2
+  {1056, 0, 8}, //   SCC11,  Bus 0
+  {1057, 0, 8}, //   SCC12,  Bus 0
   {1427, 0, 6}   // TPMS, Bus 0
  };
 
@@ -175,9 +176,13 @@ static int hyundai_community_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       vehicle_moving = hyundai_community_speed > HYUNDAI_COMMUNITY_STANDSTILL_THRSLD;
     }
 
-    if (addr == 916) {
+    if ((addr == 916) && (addr != 1057)) {
       gas_pressed = ((GET_BYTE(to_push, 5) >> 5) & 0x3) == 1;
       brake_pressed = (GET_BYTE(to_push, 6) >> 7) != 0;
+    }
+    else {
+      gas_pressed = false;
+      brake_pressed = false;
     }
 
     generic_rx_checks((addr == 832));
