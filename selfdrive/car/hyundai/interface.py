@@ -340,7 +340,7 @@ class CarInterface(CarInterfaceBase):
         events.add(EventName.buttonEnable)
       if b.type == ButtonType.cancel and b.pressed:
         events.add(EventName.buttonCancel)
-      if b.type == ButtonType.altButton3 and b.pressed not self.CP.enableCruise:
+      if b.type == ButtonType.altButton3 and b.pressed and not self.CP.enableCruise:
         events.add(EventName.buttonEnable)
         #events.add(EventName.buttonCancel)
 
