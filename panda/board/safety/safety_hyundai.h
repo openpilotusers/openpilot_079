@@ -125,12 +125,15 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       cruise_engaged_prev = cruise_engaged;
     }
 
-    if ((addr == 608) || (hyundai_legacy && (addr == 881))) {
+    if (((addr == 608) || (hyundai_legacy && (addr == 881))) && (addr != 1057)) {
       if (addr == 608) {
         gas_pressed = (GET_BYTE(to_push, 7) >> 6) != 0;
       } else {
         gas_pressed = (((GET_BYTE(to_push, 4) & 0x7F) << 1) | GET_BYTE(to_push, 3) >> 7) != 0;
       }
+    }
+    else {
+      gas_pressed = false;
     }
 
     // sample wheel speed, averaging opposite corners
@@ -141,8 +144,11 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       vehicle_moving = hyundai_speed > HYUNDAI_STANDSTILL_THRSLD;
     }
 
-    if (addr == 916) {
+    if ((addr == 916) && (addr != 1057)) {
       brake_pressed = (GET_BYTE(to_push, 6) >> 7) != 0;
+    }
+    else {
+      brake_pressed = false;
     }
 
     generic_rx_checks((addr == 832));
