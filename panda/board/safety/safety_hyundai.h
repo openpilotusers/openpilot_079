@@ -113,17 +113,17 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
     }
 
     // enter controls on rising edge of ACC, exit controls on ACC off
-    if (addr == 1057) {
-      // 2 bits: 13-14
-      int cruise_engaged = (GET_BYTES_04(to_push) >> 13) & 0x3;
-      if (cruise_engaged && !cruise_engaged_prev) {
-        controls_allowed = 1;
-      }
-      if (!cruise_engaged) {
-        controls_allowed = 0;
-      }
-      cruise_engaged_prev = cruise_engaged;
-    }
+//    if (addr == 1057) {
+//      // 2 bits: 13-14
+//      int cruise_engaged = (GET_BYTES_04(to_push) >> 13) & 0x3;
+//      if (cruise_engaged && !cruise_engaged_prev) {
+//        controls_allowed = 1;
+//      }
+//      if (!cruise_engaged) {
+//        controls_allowed = 0;
+//      }
+//      cruise_engaged_prev = cruise_engaged;
+//    }
 
     if (addr == 1056) { // for cars without long control
       // 2 bits: 13-14
@@ -156,7 +156,7 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       vehicle_moving = hyundai_speed > HYUNDAI_STANDSTILL_THRSLD;
     }
 
-    if ((addr == 916) && (addr != 1057)) {
+    if ((addr == 916) && (addr != 1056)) {
       brake_pressed = (GET_BYTE(to_push, 6) >> 7) != 0;
     }
     else {
@@ -217,7 +217,7 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     }
 
     // reset to 0 if either controls is not allowed or there's a violation
-    if (violation || !controls_allowed) {
+    if (!controls_allowed) {
       desired_torque_last = 0;
       rt_torque_last = 0;
       ts_last = ts;
