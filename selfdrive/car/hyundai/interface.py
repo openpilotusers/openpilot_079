@@ -332,17 +332,16 @@ class CarInterface(CarInterfaceBase):
     # handle button press
     for b in self.buttonEvents:
       if b.type == ButtonType.decelCruise and b.pressed \
-              and (not ret.brakePressed or ret.standstill) and self.CP.enableCruise:
+              and (not ret.brakePressed or ret.standstill) and not self.CP.enableCruise:
         events.add(EventName.buttonEnable)
       if b.type == ButtonType.accelCruise and b.pressed \
               and ((self.CC.setspeed > self.CC.clu11_speed - 2) or ret.standstill or self.CC.usestockscc) \
-              and self.CP.enableCruise:
+              and not self.CP.enableCruise:
         events.add(EventName.buttonEnable)
-      if b.type == ButtonType.cancel and b.pressed and self.CP.enableCruise:
+      if b.type == ButtonType.cancel and b.pressed:
         events.add(EventName.buttonCancel)
-      if b.type == ButtonType.altButton3 and b.pressed and not self.CP.enableCruise:
-        events.add(EventName.buttonEnable)
-        #events.add(EventName.buttonCancel)
+      if b.type == ButtonType.altButton3 and b.pressed:
+        events.add(EventName.buttonCancel)
 
     if self.CC.lanechange_manual_timer:
       events.add(EventName.laneChangeManual)

@@ -2,7 +2,7 @@ import numpy as np
 from common.numpy_fast import clip, interp
 
 GainSaS_BP = [0., 2., 5., 10., 20., 30.]
-Gain_g = [0., .01, .08, .12, .12, .16]
+Gain_g = [0., .015, .085, .14, .14, .16]
 
 GainV_BP = [0., 20., 20.01, 30.]
 Gain_V = [0.3, .6, .9, 1.1]

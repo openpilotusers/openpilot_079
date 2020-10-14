@@ -225,6 +225,10 @@ class CarState(CarStateBase):
     self.scc14 = copy.copy(cp_scc.vl["SCC14"])
     self.fca11 = copy.copy(cp_fca.vl["FCA11"])
 
+    self.scc11init = copy.copy(cp.vl["SCC11"])
+    self.scc12init = copy.copy(cp.vl["SCC12"])
+    self.fca11init = copy.copy(cp.vl["FCA11"])
+
     return ret
 
   @staticmethod

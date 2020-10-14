@@ -1,7 +1,7 @@
 import os
 import math
 
-from common.numpy_fast import clip, interp
+from numpy import interp, clip
 
 import cereal.messaging as messaging
 from selfdrive.swaglog import cloudlog
