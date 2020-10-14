@@ -209,7 +209,7 @@ class CarInterface(CarInterfaceBase):
     ret.emsAvailable = True if 608 and 809 in fingerprint[0] else False
 
     if Params().get('SccEnabled') == b'1':
-      ret.sccBus = 0 if 1057 in fingerprint[0] else 2 if 1057 in fingerprint[2] else -1
+      ret.sccBus = 2 if 1057 in fingerprint[2] and Params().get('SccHarnessPresent') == b'1' else 0 if 1057 in fingerprint[0] else -1
     else:
       ret.sccBus = -1
 
@@ -228,8 +228,8 @@ class CarInterface(CarInterfaceBase):
                           CAR.KIA_CADENZA_HEV, CAR.GRANDEUR_HEV, CAR.KIA_NIRO_HEV, CAR.KONA_HEV]):
       ret.safetyModel = car.CarParams.SafetyModel.hyundaiCommunity
 
-    #if ret.radarOffCan or (ret.sccBus == 2) or Params().get('EnableOPwithCC') == b'0':
-    #  ret.safetyModel = car.CarParams.SafetyModel.hyundaiCommunityNonscc
+    if ret.radarOffCan or (ret.sccBus == 2) or Params().get('EnableOPwithCC') == b'0':
+      ret.safetyModel = car.CarParams.SafetyModel.hyundaiCommunityNonscc
 
     if ret.mdpsHarness:
       ret.minSteerSpeed = 0.
