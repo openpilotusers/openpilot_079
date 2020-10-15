@@ -32,8 +32,8 @@ class CarInterface(CarInterfaceBase):
     ret.communityFeature = candidate not in [CAR.SONATA, CAR.PALISADE]
 
     ret.steerActuatorDelay = 0.3  # Default delay
-    ret.steerRateCost = 0.4
-    ret.steerLimitTimer = 0.4
+    ret.steerRateCost = 0.5
+    ret.steerLimitTimer = 0.8
     tire_stiffness_factor = 1.
 
     #Long tuning Params -  make individual params for cars, baseline Hyundai genesis
@@ -57,6 +57,14 @@ class CarInterface(CarInterfaceBase):
     ret.lateralTuning.pid.kiV = [0.01, 0.02, 0.03, 0.04]
     ret.lateralTuning.pid.kfBP = [0., 9., 17., 28.]
     ret.lateralTuning.pid.kfV = [0.00002, 0.00003, 0.00004, 0.00005]
+    
+    #by xps
+    #ret.lateralTuning.pid.kiBP = [0., 1., 5.]
+    #ret.lateralTuning.pid.kpV = [0.01, 0.03, 0.05]
+    #ret.lateralTuning.pid.kpBP = [0., 10., 30.]
+    #ret.lateralTuning.pid.kiV = [0.001, 0.003, 0.003]
+    #ret.lateralTuning.pid.kfBP = [0., 10., 30.]
+    #ret.lateralTuning.pid.kfV = [0.00002, 0.00003, 0.00003]
     #PID END
     
     #LQR START
@@ -201,7 +209,7 @@ class CarInterface(CarInterfaceBase):
     ret.emsAvailable = True if 608 and 809 in fingerprint[0] else False
 
     if Params().get('SccEnabled') == b'1':
-      ret.sccBus = 2 if 1057 in fingerprint[2] and Params().get('SccHarnessPresent') == b'1' else 0 if 1057 in fingerprint[0] else -1
+      ret.sccBus = 0 if 1057 in fingerprint[0] else 2 if 1057 in fingerprint[2] else -1
     else:
       ret.sccBus = -1
 
@@ -286,7 +294,7 @@ class CarInterface(CarInterfaceBase):
 
     if self.CS.brakeHold and not self.CC.usestockscc:
       events.add(EventName.brakeHold)
-    if self.CS.parkBrake:
+    if self.CS.parkBrake and not self.CC.usestockscc:
       events.add(EventName.parkBrake)
     if self.CS.brakeUnavailable and not self.CC.usestockscc:
       events.add(EventName.brakeUnavailable)
@@ -295,31 +303,7 @@ class CarInterface(CarInterfaceBase):
       self.visiononlyWarning = True
 
     buttonEvents = []
-    if self.CS.cruise_buttons != self.CS.prev_cruise_buttons and self.CC.usestockscc:
-      be = car.CarState.ButtonEvent.new_message()
-      be.type = ButtonType.unknown
-      if self.CS.cruise_buttons != 0:
-        be.pressed = True
-        but = self.CS.cruise_buttons
-      else:
-        be.pressed = False
-        but = self.CS.prev_cruise_buttons
-      if but == Buttons.RES_ACCEL:
-        be.type = ButtonType.accelCruise
-      elif but == Buttons.SET_DECEL:
-        be.type = ButtonType.decelCruise
-      elif but == Buttons.GAP_DIST:
-        be.type = ButtonType.gapAdjustCruise
-      #elif but == Buttons.CANCEL:
-      #  be.type = ButtonType.cancel
-      buttonEvents.append(be)
-    if self.CS.cruise_main_button != self.CS.prev_cruise_main_button and self.CC.usestockscc:
-      be = car.CarState.ButtonEvent.new_message()
-      be.type = ButtonType.altButton3
-      be.pressed = bool(self.CS.cruise_main_button)
-      buttonEvents.append(be)
-      
-    if self.CS.cruise_buttons != self.CS.prev_cruise_buttons and not self.CC.usestockscc:
+    if self.CS.cruise_buttons != self.CS.prev_cruise_buttons:
       be = car.CarState.ButtonEvent.new_message()
       be.pressed = self.CS.cruise_buttons != 0 
       but = self.CS.cruise_buttons
@@ -336,7 +320,7 @@ class CarInterface(CarInterfaceBase):
       buttonEvents.append(be)
       self.buttonEvents = buttonEvents
 
-    if self.CS.cruise_main_button != self.CS.prev_cruise_main_button and not self.CC.usestockscc:
+    if self.CS.cruise_main_button != self.CS.prev_cruise_main_button:
       be = car.CarState.ButtonEvent.new_message()
       be.type = ButtonType.altButton3
       be.pressed = bool(self.CS.cruise_main_button)
@@ -344,7 +328,7 @@ class CarInterface(CarInterfaceBase):
       self.buttonEvents = buttonEvents
 
     ret.buttonEvents = self.buttonEvents
-    
+
     # handle button press
     for b in self.buttonEvents:
       if b.type == ButtonType.decelCruise and b.pressed \
@@ -354,10 +338,10 @@ class CarInterface(CarInterfaceBase):
               and ((self.CC.setspeed > self.CC.clu11_speed - 2) or ret.standstill or self.CC.usestockscc) \
               and not self.CP.enableCruise:
         events.add(EventName.buttonEnable)
-      if b.type == ButtonType.cancel and b.pressed and not self.CC.usestockscc:
+      if b.type == ButtonType.cancel and b.pressed:
         events.add(EventName.buttonCancel)
       if b.type == ButtonType.altButton3 and b.pressed:
-        events.add(EventName.buttonEnable)
+        events.add(EventName.buttonCancel)
 
 
     if self.CC.lanechange_manual_timer:

@@ -92,31 +92,28 @@ class CarState(CarStateBase):
     self.cruise_main_button = cp.vl["CLU11"]["CF_Clu_CruiseSwMain"]
     self.cruise_buttons = cp.vl["CLU11"]["CF_Clu_CruiseSwState"]
 
-#    if not self.cruise_main_button:
-#      if self.cruise_buttons == 4 and self.prev_cruise_buttons != 4 and self.cancel_button_count < 3:
-#        self.cancel_button_count += 1
-#        self.cancel_button_timer = 100
-#      elif self.cancel_button_count == 3:
-#          self.cancel_button_count = 0
-#      if self.cancel_button_timer <= 100 and self.cancel_button_count:
-#        self.cancel_button_timer = max(0, self.cancel_button_timer - 1)
-#        if self.cancel_button_timer == 0:
-#          self.cancel_button_count = 0
-#    else:
-#      self.cancel_button_count = 0
+    if not self.cruise_main_button:
+      if self.cruise_buttons == 4 and self.prev_cruise_buttons != 4 and self.cancel_button_count < 3:
+        self.cancel_button_count += 1
+        self.cancel_button_timer = 100
+      elif self.cancel_button_count == 3:
+          self.cancel_button_count = 0
+      if self.cancel_button_timer <= 100 and self.cancel_button_count:
+        self.cancel_button_timer = max(0, self.cancel_button_timer - 1)
+        if self.cancel_button_timer == 0:
+          self.cancel_button_count = 0
+    else:
+      self.cancel_button_count = 0
 
     # cruise state
-#    if not self.CP.enableCruise and self.CP.openpilotLongitudinalControl:
-#      if self.cruise_buttons == 1 or self.cruise_buttons == 2:
-#        self.allow_nonscc_available = True
-#      ret.cruiseState.available = self.allow_nonscc_available != 0
-#      ret.cruiseState.enabled = ret.cruiseState.available
-    if self.CP.openpilotLongitudinalControl:
+    if not self.CP.enableCruise:
+      if self.cruise_buttons == 1 or self.cruise_buttons == 2:
+        self.allow_nonscc_available = True
+      ret.cruiseState.available = self.allow_nonscc_available != 0
+      ret.cruiseState.enabled = ret.cruiseState.available
+    elif not self.CP.radarOffCan:
       ret.cruiseState.available = (cp_scc.vl["SCC11"]["MainMode_ACC"] != 0)
       ret.cruiseState.enabled = (cp_scc.vl["SCC12"]['ACCMode'] != 0)
-    else:
-      ret.cruiseState.available = (cp_scc.vl["SCC11"]["MainMode_ACC"] != 0)
-      ret.cruiseState.enabled = ret.cruiseState.available
 
     self.lead_distance = cp_scc.vl["SCC11"]['ACC_ObjDist']
     self.vrelative = cp_scc.vl["SCC11"]['ACC_ObjRelSpd']
@@ -126,7 +123,7 @@ class CarState(CarStateBase):
     self.is_set_speed_in_mph = cp.vl["CLU11"]["CF_Clu_SPEED_UNIT"]
     if ret.cruiseState.enabled:
       speed_conv = CV.MPH_TO_MS if self.is_set_speed_in_mph else CV.KPH_TO_MS
-      if self.CP.openpilotLongitudinalControl:
+      if self.CP.radarOffCan:
         ret.cruiseState.speed = cp.vl["LVR12"]["CF_Lvr_CruiseSet"] * speed_conv
       else:
         ret.cruiseState.speed = cp_scc.vl["SCC11"]['VSetDis'] * speed_conv

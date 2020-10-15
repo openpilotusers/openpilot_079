@@ -211,7 +211,7 @@ class CarController():
       can_sends.append(create_clu11(self.packer, CS.CP.sccBus, CS.clu11, Buttons.CANCEL, self.current_veh_speed, self.clu11_cnt))
     elif CS.out.cruiseState.standstill and CS.scc12["ACCMode"] != 0 and CS.vrelative > 0:
       self.vdiff += (CS.vrelative - self.vdiff)
-      if (frame - self.lastresumeframe > 5) and (self.vdiff > .1 or CS.lead_distance > 6.):
+      if (frame - self.lastresumeframe > 5) and (self.vdiff > .2 or CS.lead_distance > 5.5.):
         can_sends.append(create_clu11(self.packer, CS.CP.sccBus, CS.clu11, Buttons.RES_ACCEL, self.current_veh_speed, self.resumebuttoncnt))
         self.resumebuttoncnt += 1
         if self.resumebuttoncnt > 5:

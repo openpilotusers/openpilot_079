@@ -1,25 +1,20 @@
 const int HYUNDAI_MAX_STEER = 384;             // like stock
 const int HYUNDAI_MAX_RT_DELTA = 112;          // max delta torque allowed for real time checks
 const uint32_t HYUNDAI_RT_INTERVAL = 250000;   // 250ms between real time checks
-const int HYUNDAI_MAX_RATE_UP = 5;
-const int HYUNDAI_MAX_RATE_DOWN = 10;
+const int HYUNDAI_MAX_RATE_UP = 3;
+const int HYUNDAI_MAX_RATE_DOWN = 7;
 const int HYUNDAI_DRIVER_TORQUE_ALLOWANCE = 50;
 const int HYUNDAI_DRIVER_TORQUE_FACTOR = 2;
 const int HYUNDAI_STANDSTILL_THRSLD = 30;  // ~1kph
 const CanMsg HYUNDAI_TX_MSGS[] = {
-  {832, 0, 8}, {832, 1, 8}, // LKAS11 Bus 0
+  {832, 0, 8},  // LKAS11 Bus 0
   {1265, 0, 4}, // CLU11 Bus 0
   {1157, 0, 4}, // LFAHDA_MFC Bus 0
-  {1265, 1, 4}, {1265, 2, 4},
-  {593, 2, 8},
-  {790, 1, 8},
-  {912, 0, 7}, {912,1, 7},
-  {1268, 0, 8}, {1268,1, 8},
-  {1056, 0, 8}, //   SCC11,  Bus 0
-  {1057, 0, 8}, //   SCC12,  Bus 0
-  {1290, 0, 8}, //   SCC13,  Bus 0
-  {905, 0, 8},  //   SCC14,  Bus 0
-  {1186, 0, 8},  //   4a2SCC, Bus 0
+  // {1056, 0, 8}, //   SCC11,  Bus 0
+  // {1057, 0, 8}, //   SCC12,  Bus 0
+  // {1290, 0, 8}, //   SCC13,  Bus 0
+  // {905, 0, 8},  //   SCC14,  Bus 0
+  // {1186, 0, 8}  //   4a2SCC, Bus 0
   {1427, 0, 6}   // TPMS, Bus 0
  };
 
@@ -129,18 +124,6 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       }
       cruise_engaged_prev = cruise_engaged;
     }
-    
-    if (addr == 1056) { // for cars without long control
-      // 2 bits: 13-14
-      int cruise_engaged = GET_BYTES_04(to_push) & 0x1; // ACC main_on signal
-      if (cruise_engaged && !cruise_engaged_prev) {
-        controls_allowed = 1;
-      }
-      if (!cruise_engaged) {
-        controls_allowed = 0;
-      }
-      cruise_engaged_prev = cruise_engaged;
-    }
 
     if ((addr == 608) || (hyundai_legacy && (addr == 881))) {
       if (addr == 608) {
@@ -158,10 +141,8 @@ static int hyundai_rx_hook(CAN_FIFOMailBox_TypeDef *to_push) {
       vehicle_moving = hyundai_speed > HYUNDAI_STANDSTILL_THRSLD;
     }
 
-    if ((addr == 916) && (addr != 1056)){
+    if (addr == 916) {
       brake_pressed = (GET_BYTE(to_push, 6) >> 7) != 0;
-    } else {
-      brake_pressed = false;
     }
 
     generic_rx_checks((addr == 832));
@@ -218,7 +199,7 @@ static int hyundai_tx_hook(CAN_FIFOMailBox_TypeDef *to_send) {
     }
 
     // reset to 0 if either controls is not allowed or there's a violation
-    if (!controls_allowed) {
+    if (violation || !controls_allowed) {
       desired_torque_last = 0;
       rt_torque_last = 0;
       ts_last = ts;

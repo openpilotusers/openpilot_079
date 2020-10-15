@@ -169,13 +169,13 @@ class RadarD():
       if not radarState.leadOne.status:
         radarState.leadOne.dRel = 150
         radarState.leadOne.vRel = 50
-        radarState.leadOne.aRel = 0
+
 
       radarState.leadTwo = get_lead(self.v_ego, self.ready, clusters, sm['model'].leadFuture, low_speed_override=False)
       if not radarState.leadTwo.status:
         radarState.leadTwo.dRel = 150
         radarState.leadTwo.vRel = 50
-        radarState.leadTwo.aRel = 0
+
     return dat
 
 
