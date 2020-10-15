@@ -15,10 +15,9 @@ from cereal import log
 LaneChangeState = log.PathPlan.LaneChangeState
 LaneChangeDirection = log.PathPlan.LaneChangeDirection
 
-#LOG_MPC = os.environ.get('LOG_MPC', True)
-LOG_MPC = True
+LOG_MPC = os.environ.get('LOG_MPC', True)
 
-LANE_CHANGE_SPEED_MIN = 40 * CV.KPH_TO_MS
+LANE_CHANGE_SPEED_MIN = 59 * CV.KPH_TO_MS
 LANE_CHANGE_TIME_MAX = 10.
 
 DESIRES = {
@@ -66,8 +65,8 @@ class PathPlanner():
     self.prev_one_blinker = False
     self.pre_auto_LCA_timer = 0.0
     
-    self.lane_change_adjust = [0.5, 1.3]
-    self.lane_change_adjust_vel = [11, 27]
+    self.lane_change_adjust = [0.7, 1.4]
+    self.lane_change_adjust_vel = [16, 27]
     self.lane_change_adjust_new = 0.0
 
   def setup_mpc(self):
