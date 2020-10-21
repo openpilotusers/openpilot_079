@@ -477,15 +477,15 @@ CHECKSUM = {
 
 FEATURES = {
   # Use Cluster for Gear Selection, rather than Transmission
-  "use_cluster_gears": {CAR.ELANTRA, CAR.KONA, CAR.ELANTRA_GT_I30, CAR.CADENZA, CAR.NIRO_HEV, CAR.GRANDEUR},
+  "use_cluster_gears": {CAR.ELANTRA, CAR.KONA, CAR.ELANTRA_GT_I30, CAR.CADENZA, CAR.GRANDEUR},
   # Use TCU Message for Gear Selection
   "use_tcu_gears": {CAR.OPTIMA, CAR.SONATA19, CAR.VELOSTER, CAR.SONATA_LF_TURBO},
   # Use E_GEAR Message for Gear Selection
   "use_elect_gears": {CAR.OPTIMA_HEV, CAR.IONIQ_EV_LTD, CAR.KONA_EV, CAR.SONATA_HEV, CAR.NIRO_EV, CAR.CADENZA_HEV,
-                      CAR.GRANDEUR_HEV, CAR.NEXO},
+                      CAR.GRANDEUR_HEV, CAR.NEXO, CAR.NIRO_HEV},
   # Use E_EMS11 Message for Gas and Brake for Hybrid/ELectric
   "use_elect_ems": {CAR.OPTIMA_HEV, CAR.IONIQ_EV_LTD, CAR.KONA_EV, CAR.SONATA_HEV, CAR.NIRO_EV, CAR.CADENZA_HEV,
-                    CAR.GRANDEUR_HEV, CAR.NEXO},
+                    CAR.GRANDEUR_HEV, CAR.NEXO, CAR.NIRO_HEV},
   # send LFA MFA message for new HKG models
   "send_lfa_mfa": {CAR.SONATA, CAR.PALISADE, CAR.SONATA_HEV, CAR.SANTA_FE, CAR.NIRO_EV},
   "has_scc13": set([]), 
