@@ -4,7 +4,7 @@ from cereal import car, log
 from common.params import Params
 
 CAMERA_OFFSET = int(Params().get('CameraOffsetAdj')) * 0.001  # m from center car to camera
-CAMERA_OFFSET_A = (int(Params().get('CameraOffsetAdj')) * 0.001) - 0.05
+CAMERA_OFFSET_A = (int(Params().get('CameraOffsetAdj')) * 0.001) - 0.1
 
 
 def compute_path_pinv(l=50):
@@ -99,7 +99,7 @@ class LanePlanner():
       elif curvature <= -0.001:   # right curve
         if Curv < -0.006:
           Curv = -0.006
-        lean_offset = -0.02 + (Curv * 15) #move the car to right at right curve
+        lean_offset = -0.04 + (Curv * 30) #move the car to right at right curve
       else:
         lean_offset = 0
 
