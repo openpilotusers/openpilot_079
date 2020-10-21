@@ -129,10 +129,22 @@ class CarState(CarStateBase):
 
 
     #TPMS
-    ret.tpmsPressureFl = cp.vl["TPMS11"]['PRESSURE_FL'] * 5 * 0.145
-    ret.tpmsPressureFr = cp.vl["TPMS11"]['PRESSURE_FR'] * 5 * 0.145
-    ret.tpmsPressureRl = cp.vl["TPMS11"]['PRESSURE_RL'] * 5 * 0.145
-    ret.tpmsPressureRr = cp.vl["TPMS11"]['PRESSURE_RR'] * 5 * 0.145
+    if cp.vl["TPMS11"]['PRESSURE_FL'] > 43:
+      ret.tpmsPressureFl = cp.vl["TPMS11"]['PRESSURE_FL'] * 5 * 0.145
+    else:
+      ret.tpmsPressureFl = cp.vl["TPMS11"]['PRESSURE_FL']
+    if cp.vl["TPMS11"]['PRESSURE_FR'] > 43:
+      ret.tpmsPressureFr = cp.vl["TPMS11"]['PRESSURE_FR'] * 5 * 0.145
+    else:
+      ret.tpmsPressureFr = cp.vl["TPMS11"]['PRESSURE_FR']
+    if cp.vl["TPMS11"]['PRESSURE_RL'] > 43:
+      ret.tpmsPressureRl = cp.vl["TPMS11"]['PRESSURE_RL'] * 5 * 0.145
+    else:
+      ret.tpmsPressureRl = cp.vl["TPMS11"]['PRESSURE_RL']
+    if cp.vl["TPMS11"]['PRESSURE_RR'] > 43:
+      ret.tpmsPressureRr = cp.vl["TPMS11"]['PRESSURE_RR'] * 5 * 0.145
+    else:
+      ret.tpmsPressureRr = cp.vl["TPMS11"]['PRESSURE_RR']
 
     self.cruiseGapSet = cp_scc.vl["SCC11"]['TauGapSet']
 
