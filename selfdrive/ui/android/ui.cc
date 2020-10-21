@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
   const int MAX_VOLUME = LEON ? 15 : 12;
   s->sound->setVolume(MIN_VOLUME);
 
-  if (s->scene.params.nOpkrAutoScreenOff) {
+  if (s->scene.params.nOpkrAutoScreenOff && !s->awake) {
     set_awake(s, true);
   }
 
@@ -178,6 +178,10 @@ int main(int argc, char* argv[]) {
     if (s->started || s->ignition) {
       if (s->scene.params.nOpkrAutoScreenOff) {
         // turn on screen when alert is here.
+        auto alert_sound = s->scene.controls_state.getAlertSound();
+        if (alert_sound != AudibleAlert::NONE) {
+          set_awake(s, true);
+        }
         if (s->awake_timeout == 0 && (s->status == STATUS_DISENGAGED || s->status == STATUS_ALERT || s->status == STATUS_WARNING)) {
           set_awake(s, true);
         }
