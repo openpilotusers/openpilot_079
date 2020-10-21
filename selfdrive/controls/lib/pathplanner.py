@@ -218,7 +218,7 @@ class PathPlanner():
 
     # account for actuation delay
     if mode_select == 3:
-      self.cur_state = calc_states_after_delay(self.cur_state, v_ego, angle_steers - angle_offset, curvature_factor, VM.sR, (CP.steerActuatorDelay + 0.05)
+      self.cur_state = calc_states_after_delay(self.cur_state, v_ego, angle_steers - angle_offset, curvature_factor, VM.sR, (CP.steerActuatorDelay + 0.05))
     else:
       self.cur_state = calc_states_after_delay(self.cur_state, v_ego, angle_steers - angle_offset, curvature_factor, VM.sR, CP.steerActuatorDelay)
 
