@@ -246,7 +246,7 @@ class CarController():
       can_sends.append(create_clu11(self.packer, frame, CS.mdps_bus, CS.clu11, Buttons.NONE, enabled_speed))
 
 
-    str_log1 = '곡률={:03.0f}  토크={:03.0f}'.format(abs(self.model_speed), abs(new_steer))
+    str_log1 = '곡률={:03.0f}  토크={:03.0f} TPMS={}/{}/{}/{}'.format(abs(self.model_speed), abs(new_steer), CS.out.tpmsPressureFl,CS.out.tpmsPressureFr,CS.out.tpmsPressureRl,CS.out.tpmsPressureRr)
     str_log2 = '프레임률={:03.0f}'.format(self.timer1.sampleTime())
     trace1.printf1( '{}  {}'.format(str_log1, str_log2))
 
