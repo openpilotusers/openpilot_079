@@ -178,7 +178,8 @@ int main(int argc, char* argv[]) {
     if (s->started || s->ignition) {
       if (s->scene.params.nOpkrAutoScreenOff) {
         // turn on screen when alert is here.
-        if (s->awake_timeout == 0 && (s->status == STATUS_DISENGAGED || s->status == STATUS_ALERT || s->status == STATUS_WARNING || (s->scene.alert_text1 != ""))) {
+        auto alertStatus = s->scene.controls_state.getAlertStatus();
+        if (s->awake_timeout == 0 && (s->status == STATUS_DISENGAGED || s->status == STATUS_ALERT || s->status == STATUS_WARNING || (alertStatus == cereal::ControlsState::AlertStatus::NORMAL))) {
           set_awake(s, true);
         }
       } else {
