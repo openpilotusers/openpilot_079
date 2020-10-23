@@ -129,7 +129,13 @@ void update_sockets(UIState *s) {
 
     s->scene.angleSteers = scene.controls_state.getAngleSteers();
     s->scene.steerOverride= scene.controls_state.getSteerOverride();
-    s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
+    if ( scene.controls_state.getLateralControlState().getPidState().getOutput() != "") {
+      s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
+    } else if ( scene.controls_state.getLateralControlState().getLqrState().getOutput() != "") {
+      s->scene.output_scale = scene.controls_state.getLateralControlState().getLqrState().getOutput();
+    } else if ( scene.controls_state.getLateralControlState().getIndiState().getOutput() != "") {
+      s->scene.output_scale = scene.controls_state.getLateralControlState().getIndiState().getOutput();
+    }
     s->scene.angleSteersDes = scene.controls_state.getAngleSteersDes();
 
     s->scene.alertTextMsg1 = scene.controls_state.getAlertTextMsg1(); //debug1
