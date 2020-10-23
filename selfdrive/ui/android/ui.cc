@@ -179,10 +179,8 @@ int main(int argc, char* argv[]) {
       if (s->scene.params.nOpkrAutoScreenOff) {
         // turn on screen when alert is here.
         auto alert_sound = s->scene.controls_state.getAlertSound();
-        if (alert_sound != AudibleAlert::NONE) {
-          set_awake(s, true);
-        }
-        if (s->awake_timeout == 0 && (s->status == STATUS_DISENGAGED || s->status == STATUS_ALERT || s->status == STATUS_WARNING)) {
+        auto alertStatus = s->scene.controls_state.getAlertStatus();
+        if (s->awake_timeout == 0 && (s->status == STATUS_DISENGAGED || s->status == STATUS_ALERT || s->status == STATUS_WARNING || alert_sound != AudibleAlert::NONE || alertStatus == cereal::ControlsState::AlertStatus::NORMAL)) {
           set_awake(s, true);
         }
       } else {
