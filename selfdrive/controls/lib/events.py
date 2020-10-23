@@ -404,7 +404,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   EventName.driverMonitorLowAcc: {
     ET.WARNING: Alert(
       "운전자 얼굴 확인 중",
-      "운전자 얼굴 인식이 어렵습니다",
+      "운전자 얼굴 인식이 원할하지 않습니다",
       AlertStatus.normal, AlertSize.mid,
       Priority.LOW, VisualAlert.none, AudibleAlert.none, .4, 0., 1.5),
   },
