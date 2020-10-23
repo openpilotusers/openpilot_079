@@ -88,9 +88,9 @@ class Spdctrl(SpdController):
             elif lead_objspd > 5 and CS.clu_Vanz > 60 and CS.VSetDis < 75: # 처음출발시 선행차량 급가속할 때 차량속도 20되기 전 최대한 설정속도 업 한 후 대기
                 self.seq_step_debug = "SS>VS,종가"
                 lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 5, 5)
-            elif lead_objspd >= 0 and CS.clu_Vanz >= (int(CS.VSetDis) - 5) and int(CS.clu_Vanz * 0.5) < dRel:
+            elif lead_objspd >= 0 and CS.clu_Vanz >= (int(CS.VSetDis) - 6) and int(CS.clu_Vanz * 0.5) < dRel:
                 self.seq_step_debug = "SS>VS,+1"
-                lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 55, 2)
+                lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 55, 3)
             elif CS.clu_Vanz > 50 and lead_objspd < 0 and int(CS.clu_Vanz * 0.3) > dRel:
                 self.seq_step_debug = "SS>VS,-1"
                 lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 100, -1)
@@ -99,9 +99,9 @@ class Spdctrl(SpdController):
                 lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 20, -3)
             else:
                 self.seq_step_debug = "SS>VS,거리유지"
-        elif lead_objspd >= 0 and CS.clu_Vanz >= (int(CS.VSetDis) - 5) and int(CS.clu_Vanz * 0.5) < dRel:
+        elif lead_objspd >= 0 and CS.clu_Vanz >= (int(CS.VSetDis) - 6) and int(CS.clu_Vanz * 0.5) < dRel:
             self.seq_step_debug = "일반가속"
-            lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 55, 2)
+            lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 55, 3)
         elif lead_objspd < 0 and int(CS.clu_Vanz * 0.3) > dRel:
             self.seq_step_debug = "일반감속"
             lead_wait_cmd, lead_set_speed = self.get_tm_speed( CS, 100, -1)
@@ -148,7 +148,7 @@ class Spdctrl(SpdController):
             self.steer_mode = "편도1차선"
 
         str3 = '주행모드={:s}  설정속도={:03.0f}/{:03.0f}  타이머={:03.0f}/{:03.0f}'.format( self.steer_mode, set_speed, CS.VSetDis, long_wait_cmd, self.long_curv_timer )
-        str4 = '  차=D:{:05.1f}/V:{:03.0f}  구분={:s}'.format(  CS.lead_distance, CS.lead_objspd, self.seq_step_debug )
+        str4 = '  차=D:{:03.0f}/V:{:03.0f}  CG={:1.0f}  구분={:s}'.format(  CS.lead_distance, CS.lead_objspd, CS.cruiseGapSet, self.seq_step_debug )
 
         str5 = str3 + str4
         trace1.printf2( str5 )
