@@ -131,6 +131,7 @@ void update_sockets(UIState *s) {
     s->scene.steerOverride= scene.controls_state.getSteerOverride();
     s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
     s->scene.angleSteersDes = scene.controls_state.getAngleSteersDes();
+    s->scene.curvature = scene.controls_state.getCurvature();
 
     s->scene.alertTextMsg1 = scene.controls_state.getAlertTextMsg1(); //debug1
     s->scene.alertTextMsg2 = scene.controls_state.getAlertTextMsg2(); //debug2
@@ -183,6 +184,13 @@ void update_sockets(UIState *s) {
     //scene.liveParams = sm["liveParameters"].getLiveParameters();
     auto data = sm["liveParameters"].getLiveParameters();    
     s->scene.steerRatio=data.getSteerRatio();
+    scene.liveParams.gyroBias = data.getGyroBias();
+    scene.liveParams.angleOffset = data.getAngleOffset();
+    scene.liveParams.angleOffsetAverage = data.getAngleOffsetAverage();
+    scene.liveParams.stiffnessFactor = data.getStiffnessFactor();
+    scene.liveParams.steerRatio = data.getSteerRatio();
+    scene.liveParams.yawRate = data.getYawRate();
+    scene.liveParams.posenetSpeed = data.getPosenetSpeed();
   }
   if(sm.updated("liveMpc")) {
     auto data = sm["liveMpc"].getLiveMpc();
@@ -251,6 +259,7 @@ void update_sockets(UIState *s) {
     scene.dmonitoring_state = sm["dMonitoringState"].getDMonitoringState();
     scene.is_rhd = scene.dmonitoring_state.getIsRHD();
     scene.frontview = scene.dmonitoring_state.getIsPreview();
+    scene.awareness_status = scene.dmonitoring_state.getAwarenessStatus();
   } else if ((sm.frame - sm.rcv_frame("dMonitoringState")) > UI_FREQ/2) {
     scene.frontview = false;
   }
@@ -283,6 +292,21 @@ void update_sockets(UIState *s) {
 
   if (sm.updated("pathPlan")) {
     scene.path_plan = sm["pathPlan"].getPathPlan();
+    auto data = sm["pathPlan"].getPathPlan();
+
+    scene.pathPlan.laneWidth = data.getLaneWidth();
+    scene.pathPlan.steerRatio = data.getSteerRatio();
+    scene.pathPlan.cProb = data.getCProb();
+    scene.pathPlan.lProb = data.getLProb();
+    scene.pathPlan.rProb = data.getRProb();
+    scene.pathPlan.angleOffset = data.getAngleOffset();
+    scene.pathPlan.steerActuatorDelay = data.getSteerActuatorDelay();
+
+    auto l_list = data.getLPoly();
+    auto r_list = data.getRPoly();
+
+    scene.pathPlan.lPoly = l_list[3];
+    scene.pathPlan.rPoly = r_list[3];
   }
 
   s->started = scene.thermal.getStarted() || scene.frontview;

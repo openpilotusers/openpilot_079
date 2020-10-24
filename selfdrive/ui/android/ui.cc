@@ -169,6 +169,8 @@ int main(int argc, char* argv[]) {
       case 1: ui_get_params( "OpkrAutoScreenOff", &s->scene.params.nOpkrAutoScreenOff ); break;
       case 2: ui_get_params( "OpkrUIBrightness", &s->scene.params.nOpkrUIBrightness ); break;
       case 3: ui_get_params( "OpkrUIVolumeBoost", &s->scene.params.nOpkrUIVolumeBoost ); break;
+      case 4: ui_get_params( "DebugUi1", &s->scene.params.nDebugUi1 ); break;
+      case 5: ui_get_params( "DebugUi2", &s->scene.params.nDebugUi2 ); break;
       default: nParamRead = 0; break;
     }
 

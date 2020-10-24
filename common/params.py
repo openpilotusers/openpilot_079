@@ -146,6 +146,14 @@ keys = {
   "OpkrBatteryChargingControl": [TxType.PERSISTENT],
   "OpkrBatteryChargingMin": [TxType.PERSISTENT],
   "OpkrBatteryChargingMax": [TxType.PERSISTENT],
+  "OpkrUiOpen": [TxType.PERSISTENT],
+  "OpkrDriveOpen": [TxType.PERSISTENT],
+  "OpkrTuneOpen": [TxType.PERSISTENT],
+  "OpkrControlOpen": [TxType.PERSISTENT],
+  "LeftCurvOffsetAdj": [TxType.PERSISTENT],
+  "RightCurvOffsetAdj": [TxType.PERSISTENT],
+  "DebugUi1": [TxType.PERSISTENT],
+  "DebugUi2": [TxType.PERSISTENT],
 }
 
 

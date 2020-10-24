@@ -119,6 +119,7 @@ typedef struct UIScene {
   std::string alertTextMsg2;
   std::string alert_type;
   cereal::ControlsState::AlertSize alert_size;
+  float awareness_status;
 
   bool  brakePress;
   bool recording;
@@ -134,6 +135,7 @@ typedef struct UIScene {
   float steerRatio;
   bool brakeLights;
   float angleSteersDes;
+  float curvature;
   bool steerOverride;
   float output_scale; 
   float cpu0Temp;
@@ -163,11 +165,40 @@ typedef struct UIScene {
   float path_points[MODEL_PATH_DISTANCE];
   float right_lane_points[MODEL_PATH_DISTANCE];
 
+  struct _LiveParams
+  {
+    float gyroBias;
+    float angleOffset;
+    float angleOffsetAverage;
+    float stiffnessFactor;
+    float steerRatio;
+    float yawRate;
+    float posenetSpeed;
+  } liveParams;
+
+  struct _PathPlan
+  {
+    float laneWidth;
+    float steerRatio;
+    float steerActuatorDelay;
+
+    float cProb;
+    float lProb;
+    float rProb;
+
+    float angleOffset;
+
+    float lPoly;
+    float rPoly;
+  } pathPlan;
+
   struct  _PARAMS
   {
     int nOpkrAutoScreenOff;
     int nOpkrUIBrightness;
     int nOpkrUIVolumeBoost;
+    int nDebugUi1;
+    int nDebugUi2;
   } params;
 } UIScene;
 

@@ -268,6 +268,7 @@ class PathPlanner():
     plan_send.pathPlan.angleSteers = float(self.angle_steers_des_mpc)
     plan_send.pathPlan.rateSteers = float(rate_desired)
     plan_send.pathPlan.angleOffset = float(sm['liveParameters'].angleOffset)
+    #plan_send.pathPlan.angleOffset = float(sm['liveParameters'].angleOffsetAverage)
     plan_send.pathPlan.mpcSolutionValid = bool(plan_solution_valid)
     plan_send.pathPlan.paramsValid = bool(sm['liveParameters'].valid)
 
@@ -275,6 +276,7 @@ class PathPlanner():
     plan_send.pathPlan.laneChangeState = self.lane_change_state
     plan_send.pathPlan.laneChangeDirection = self.lane_change_direction
     plan_send.pathPlan.steerRatio = VM.sR
+    plan_send.pathPlan.steerActuatorDelay = CP.steerActuatorDelay
 
     pm.send('pathPlan', plan_send)
 

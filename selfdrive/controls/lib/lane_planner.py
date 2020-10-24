@@ -3,6 +3,10 @@ import numpy as np
 from cereal import car, log
 from common.params import Params
 
+#zorrobyte
+def mean(numbers): 
+     return float(sum(numbers)) / max(len(numbers), 1) 
+
 CAMERA_OFFSET = int(Params().get('CameraOffsetAdj')) * 0.001  # m from center car to camera
 CAMERA_OFFSET_A = (int(Params().get('CameraOffsetAdj')) * 0.001) - 0.1
 
@@ -43,9 +47,6 @@ def calc_d_poly(l_poly, r_poly, p_poly, l_prob, r_prob, lane_width, v_ego):
 
   lr_prob = l_prob + r_prob - l_prob * r_prob
 
-  if lr_prob > 0.65:
-    lr_prob = min(lr_prob * 1.35, 1.0)
-
   d_poly_lane = (l_prob * path_from_left_lane + r_prob * path_from_right_lane) / (l_prob + r_prob + 0.0001)
   return lr_prob * d_poly_lane + (1.0 - lr_prob) * p_poly
 
@@ -57,9 +58,14 @@ class LanePlanner():
     self.p_poly = [0., 0., 0., 0.]
     self.d_poly = [0., 0., 0., 0.]
 
-    self.lane_width_estimate = 3.7
-    self.lane_width_certainty = 1.0
-    self.lane_width = 3.7
+    #comma
+    #self.lane_width_estimate = 3.7
+    #self.lane_width_certainty = 1.0
+    #self.lane_width = 3.7
+    #zorro
+    self.lane_width = 2.85
+    self.readings = []
+    self.frame = 0
 
     self.l_prob = 0.
     self.r_prob = 0.
@@ -89,9 +95,9 @@ class LanePlanner():
   def update_d_poly(self, v_ego, sm):
     curvature = sm['controlsState'].curvature
     mode_select = sm['carState'].cruiseState.modeSel
+    Curv = round(curvature, 3)
 
     if mode_select == 3:
-      Curv = round(curvature, 3)
       if curvature >= 0.001: # left curve
         if Curv > 0.006:
           Curv = 0.006
@@ -102,21 +108,65 @@ class LanePlanner():
         lean_offset = -0.04 + (Curv * 30) #move the car to right at right curve
       else:
         lean_offset = 0
-
     # only offset left and right lane lines; offsetting p_poly does not make sense
       self.l_poly[3] += CAMERA_OFFSET_A + lean_offset
       self.r_poly[3] += CAMERA_OFFSET_A + lean_offset
+
+    elif int(Params().get('LeftCurvOffsetAdj')) != 0 or int(Params().get('RightCurvOffsetAdj')) != 0:
+      leftCurvOffsetAdj = int(Params().get('LeftCurvOffsetAdj'))
+      rightCurvOffsetAdj = int(Params().get('RightCurvOffsetAdj'))
+      if curvature >= 0.001 and leftCurvOffsetAdj < 0: # left curve
+        if Curv > 0.006:
+          Curv = 0.006
+        lean_offset = (-leftCurvOffsetAdj * 0.01) + (Curv * (-leftCurvOffsetAdj * 5)) #move the car to left at left curve
+      elif curvature >= 0.001 and leftCurvOffsetAdj > 0: # left curve
+        if Curv > 0.006:
+          Curv = 0.006
+        lean_offset = (-leftCurvOffsetAdj * 0.01) + (Curv * (-leftCurvOffsetAdj * 5)) #move the car to right at left curve
+      elif curvature <= -0.001 and rightCurvOffsetAdj < 0: # right curve
+        if Curv < -0.006:
+          Curv = -0.006
+        lean_offset = (-rightCurvOffsetAdj * 0.01) + (-Curv * (-rightCurvOffsetAdj * 5)) #move the car to left at right curve
+      elif curvature <= -0.001 and rightCurvOffsetAdj > 0: # right curve
+        if Curv < -0.006:
+          Curv = -0.006
+        lean_offset = (-rightCurvOffsetAdj * 0.01) + (-Curv * (-rightCurvOffsetAdj * 5)) #move the car to right at right curve
+      else:
+        lean_offset = 0
+    # only offset left and right lane lines; offsetting p_poly does not make sense
+      self.l_poly[3] += CAMERA_OFFSET_A + lean_offset
+      self.r_poly[3] += CAMERA_OFFSET_A + lean_offset
+
     else:
       self.l_poly[3] += CAMERA_OFFSET
       self.r_poly[3] += CAMERA_OFFSET
 
     # Find current lanewidth
-    self.lane_width_certainty += 0.05 * (self.l_prob * self.r_prob - self.lane_width_certainty)
-    current_lane_width = abs(self.l_poly[3] - self.r_poly[3])
-    self.lane_width_estimate += 0.005 * (current_lane_width - self.lane_width_estimate)
-    speed_lane_width = interp(v_ego, [0., 31.], [2.8, 3.5])
-    self.lane_width = self.lane_width_certainty * self.lane_width_estimate + \
-                      (1 - self.lane_width_certainty) * speed_lane_width
+    #self.lane_width_certainty += 0.05 * (self.l_prob * self.r_prob - self.lane_width_certainty)
+    #current_lane_width = abs(self.l_poly[3] - self.r_poly[3])
+    #self.lane_width_estimate += 0.005 * (current_lane_width - self.lane_width_estimate)
+    #speed_lane_width = interp(v_ego, [0., 31.], [2.85, 3.5])
+    #self.lane_width = self.lane_width_certainty * self.lane_width_estimate + \
+    #                  (1 - self.lane_width_certainty) * speed_lane_width
+
+    #zorrobyte code
+    # Find current lanewidth
+    if self.l_prob > 0.49 and self.r_prob > 0.49:
+      self.frame += 1
+      if self.frame % 20 == 0:
+        self.frame = 0
+        current_lane_width = sorted((2.5, abs(self.l_poly[3] - self.r_poly[3]), 3.5))[1]
+        max_samples = 30
+        self.readings.append(current_lane_width)
+        self.lane_width = mean(self.readings)
+        if len(self.readings) == max_samples:
+          self.readings.pop(0)
+
+    #zorrobyte
+    # Don't exit dive
+    if abs(self.l_poly[3] - self.r_poly[3]) > self.lane_width:
+      self.r_prob = self.r_prob / interp(self.l_prob, [0, 1], [1, 3])
+
 
     self.d_poly = calc_d_poly(self.l_poly, self.r_poly, self.p_poly, self.l_prob, self.r_prob, self.lane_width, v_ego)
 
