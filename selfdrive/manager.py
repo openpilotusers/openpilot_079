@@ -454,9 +454,6 @@ def manager_thread():
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})
 
-  # save boot log
-  subprocess.call(["./loggerd", "--bootlog"], cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
-
   params = Params()
 
   EnableLogger = int(params.get('OpkrEnableLogger'))     
@@ -469,6 +466,9 @@ def manager_thread():
     persistent_processes.remove( 'updated' )
     persistent_processes.remove( 'deleter' )
     persistent_processes.remove( 'tombstoned' )
+  else:
+    # save boot log
+    subprocess.call(["./loggerd", "--bootlog"], cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
 
   # start daemon processes
   for p in daemon_processes:

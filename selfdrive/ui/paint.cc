@@ -364,12 +364,40 @@ static void ui_draw_vision_lanes(UIState *s) {
     update_all_lane_lines_data(s, scene->model.getLeftLane(), scene->left_lane_points, pvd);
     update_all_lane_lines_data(s, scene->model.getRightLane(), scene->right_lane_points, pvd + MODEL_LANE_PATH_CNT);
   }
+  
+  float  left_lane =  fmax(0.1, scene->model.getLeftLane().getProb());
+  float  right_lane =  fmax( 0.1, scene->model.getRightLane().getProb());
+  NVGcolor colorLeft = nvgRGBAf(1.0, 1.0, 1.0, left_lane );
+  NVGcolor colorRight = nvgRGBAf(1.0, 1.0, 1.0, right_lane );
 
+  if( scene->leftBlinker )
+  {
+    if( scene->leftblindspot )
+      colorLeft  = nvgRGBAf(1.0, 0.2, 0.2, 1.0 );
+    else
+      colorLeft  = nvgRGBAf(0.2, 0.2, 1.0, 1.0 );    
+  }
+  else if( scene->leftblindspot )
+  {
+    colorLeft  = nvgRGBAf(1.0, 0.5, 0.5, left_lane );
+  }
+    
+  if( scene->rightBlinker )
+  {
+    if( scene->rightblindspot )
+        colorRight  = nvgRGBAf(1.0, 0.2, 0.2, 1.0 );
+    else
+        colorRight  = nvgRGBAf(0.2, 0.2, 1.0, 1.0 ); 
+  }
+  else if( scene->rightblindspot )
+  {
+    colorRight  = nvgRGBAf(1.0, 0.5, 0.5, right_lane );
+  }
   // Draw left lane edge
-  ui_draw_lane(s, pvd, nvgRGBAf(1.0, 1.0, 1.0, scene->model.getLeftLane().getProb()));
+  ui_draw_lane(s, pvd, colorLeft);
 
   // Draw right lane edge
-  ui_draw_lane(s, pvd + MODEL_LANE_PATH_CNT, nvgRGBAf(1.0, 1.0, 1.0, scene->model.getRightLane().getProb()));
+  ui_draw_lane(s, pvd + MODEL_LANE_PATH_CNT, colorRight);
 
   if(s->sm->updated("radarState")) {
     update_all_track_data(s);
@@ -1084,6 +1112,52 @@ static void bb_ui_draw_UI(UIState *s)
 
 //BB END: functions added for the display of various items
 
+static void ui_draw_vision_car(UIState *s) {
+  const UIScene *scene = &s->scene;
+  const int car_size = 250;
+  const int car_x_left = (scene->viz_rect.centerX() - 500);
+  const int car_x_right = (scene->viz_rect.centerX() + 500);
+  const int car_y = 700;
+  const int car_img_size_w = (car_size * 1);
+  const int car_img_size_h = (car_size * 1.17);
+  const int car_img_x_left = (car_x_left - (car_img_size_w / 2));
+  const int car_img_x_right = (car_x_right - (car_img_size_w / 2));
+  const int car_img_y = (car_y - (car_size / 4));
+
+  //bool car_valid_left = scene->leftblindspot;
+  //bool car_valid_right = scene->rightblindspot;
+  bool car_valid_left = true;
+  bool car_valid_right = true;
+  float car_img_alpha;
+
+  if(car_valid_left || car_valid_right) {
+    s->scene.blindspot_blinkingrate -= 6;
+    if(scene->blindspot_blinkingrate<0) s->scene.blindspot_blinkingrate = 120;
+    if (scene->blindspot_blinkingrate>=60) {
+      car_img_alpha = 0.6f;
+    } else {
+      car_img_alpha = 0.0f;
+    }
+  }
+
+  if(car_valid_left) {
+    NVGpaint car_img_left = nvgImagePattern(s->vg, car_img_x_left, car_img_y,
+      car_img_size_w, car_img_size_h, 0, s->img_car_left, car_img_alpha);
+    nvgBeginPath(s->vg);
+    nvgRect(s->vg, car_img_x_left, car_img_y, car_img_size_w, car_img_size_h);
+    nvgFillPaint(s->vg, car_img_left);
+    nvgFill(s->vg);
+  }
+  if(car_valid_right) {
+    NVGpaint car_img_right = nvgImagePattern(s->vg, car_img_x_right, car_img_y,
+      car_img_size_w, car_img_size_h, 0, s->img_car_right, car_img_alpha);
+    nvgBeginPath(s->vg);
+    nvgRect(s->vg, car_img_x_right, car_img_y, car_img_size_w, car_img_size_h);
+    nvgFillPaint(s->vg, car_img_right);
+    nvgFill(s->vg);
+  }
+}
+
 static void ui_draw_vision_footer(UIState *s) {
   const UIScene *scene = &s->scene;
   nvgBeginPath(s->vg);
@@ -1091,6 +1165,7 @@ static void ui_draw_vision_footer(UIState *s) {
   ui_draw_vision_face(s);
   bb_ui_draw_UI(s);
   ui_draw_tpms(s);
+  ui_draw_vision_car(s);
 }
 
 void ui_draw_vision_alert(UIState *s, cereal::ControlsState::AlertSize va_size, int va_color,
@@ -1294,6 +1369,10 @@ void ui_nvg_init(UIState *s) {
   assert(s->img_turn != 0);
   s->img_face = nvgCreateImage(s->vg, "../assets/img_driver_face.png", 1);
   assert(s->img_face != 0);
+  s->img_car_left = nvgCreateImage(s->vg, "../assets/img_car_left.png", 1);
+  assert(s->img_car_left != 0);
+  s->img_car_right = nvgCreateImage(s->vg, "../assets/img_car_right.png", 1);
+  assert(s->img_car_right != 0);
   s->img_button_settings = nvgCreateImage(s->vg, "../assets/images/button_settings.png", 1);
   assert(s->img_button_settings != 0);
   s->img_button_home = nvgCreateImage(s->vg, "../assets/images/button_home.png", 1);
