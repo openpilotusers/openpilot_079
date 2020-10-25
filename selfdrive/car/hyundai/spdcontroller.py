@@ -12,7 +12,7 @@ from selfdrive.controls.lib.planner import calc_cruise_accel_limits
 from selfdrive.controls.lib.speed_smoother import speed_smoother
 from selfdrive.controls.lib.long_mpc import LongitudinalMpc
 
-from selfdrive.car.hyundai.values import Buttons, SteerLimitParams, CAR
+from selfdrive.car.hyundai.values import Buttons, SteerLimitParams
 from common.numpy_fast import clip, interp
 from common.params import Params
 
@@ -106,8 +106,6 @@ class SpdController():
         self.params = Params()
         self.cruise_set_mode = int(self.params.get('CruiseStatemodeSelInit'))
 
-        self.car_fingerprint = CP.carFingerprint
-
 
     def reset(self):
         self.v_model = 0
@@ -191,11 +189,8 @@ class SpdController():
             self.prev_VSetDis = int(CS.VSetDis)
             set_speed_kph = int(CS.VSetDis)
             if self.prev_clu_CruiseSwState != CS.cruise_buttons:  # MODE 전환.
-                if self.car_fingerprint not in [CAR.ELANTRA] and CS.cruise_buttons == Buttons.CANCEL: 
+                if CS.cruise_buttons == Buttons.CANCEL: 
                     self.cruise_set_mode += 1
-                elif self.car_fingerprint in [CAR.ELANTRA] and CS.cruise_buttons == Buttons.GAP_DIST:
-                    self.cruise_set_mode += 1
-
                 if self.cruise_set_mode > 3:
                     self.cruise_set_mode = 0
                 self.prev_clu_CruiseSwState = CS.cruise_buttons
