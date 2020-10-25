@@ -191,9 +191,9 @@ class SpdController():
             self.prev_VSetDis = int(CS.VSetDis)
             set_speed_kph = int(CS.VSetDis)
             if self.prev_clu_CruiseSwState != CS.cruise_buttons:  # MODE 전환.
-                if self.car_fingerprint not in [CAR.ELANTRA] and CS.cruise_buttons == Buttons.CANCEL and not CS.acc_active: 
+                if self.car_fingerprint not in [CAR.ELANTRA] and CS.cruise_buttons == Buttons.CANCEL: 
                     self.cruise_set_mode += 1
-                elif self.car_fingerprint in [CAR.ELANTRA] and CS.cruise_buttons == Buttons.GAP_DIST and not CS.acc_active:
+                elif self.car_fingerprint in [CAR.ELANTRA] and CS.cruise_buttons == Buttons.GAP_DIST:
                     self.cruise_set_mode += 1
 
                 if self.cruise_set_mode > 3:
