@@ -4,8 +4,6 @@ import numpy as np
 from cereal import log
 import cereal.messaging as messaging
 
-
-from cereal import log
 import cereal.messaging as messaging
 from selfdrive.config import Conversions as CV
 from selfdrive.controls.lib.planner import calc_cruise_accel_limits
@@ -17,7 +15,6 @@ from common.numpy_fast import clip, interp
 from common.params import Params
 
 from selfdrive.config import RADAR_TO_CAMERA
-
 
 import common.log as trace1
 import common.CTime1000 as tm
@@ -152,7 +149,7 @@ class SpdController():
         return model_speed, model_sum
 
 
-    def update_cruiseSW(self, CS ):
+    def update_cruiseSW(self, CS):
         set_speed_kph = int(round(self.cruise_set_speed_kph))
         delta_vsetdis = 0
         if CS.acc_active:
@@ -189,7 +186,7 @@ class SpdController():
             self.prev_VSetDis = int(CS.VSetDis)
             set_speed_kph = int(CS.VSetDis)
             if self.prev_clu_CruiseSwState != CS.cruise_buttons:  # MODE 전환.
-                if CS.cruise_buttons == Buttons.CANCEL: 
+                if CS.cruise_buttons == Buttons.GAP_DIST and not CS.acc_active and CS.out.cruiseState.available:
                     self.cruise_set_mode += 1
                 if self.cruise_set_mode > 3:
                     self.cruise_set_mode = 0
