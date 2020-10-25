@@ -65,7 +65,7 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, steerRatio, wheelbase):
 
 
 class SpdController():
-    def __init__(self, CP):
+    def __init__(self, CP=None):
         self.long_control_state = 0  # initialized to off
 
         self.seq_step_debug = ""
