@@ -115,6 +115,7 @@ class CarController():
     self.yRel = 0
     self.vRel = 0
 
+    self.cruise_gap = 0.0
     self.cruise_gap_prev = 0
     self.cruise_gap_set_init = 0
     self.cruise_gap_switch_timer = 0
@@ -289,9 +290,11 @@ class CarController():
         self.lkas_switch = "ON"
       else:
         self.lkas_switch = "-"
+      if self.cruise_gap != CS.cruiseGapSet:
+        self.cruise_gap = CS.cruiseGapSet
 
 
-      str_log2 = '주행모드={:s}  MDPS상태={:s}  LKAS버튼={:s}  크루즈갭={:1.0f}'.format(self.steer_mode, self.mdps_status, self.lkas_switch, CS.cruiseGapSet)
+      str_log2 = '주행모드={:s}  MDPS상태={:s}  LKAS버튼={:s}  크루즈갭={:1.0f}'.format(self.steer_mode, self.mdps_status, self.lkas_switch, self.cruise_gap)
       trace1.printf2( '{}'.format( str_log2 ) )
 
 

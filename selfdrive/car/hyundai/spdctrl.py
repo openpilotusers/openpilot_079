@@ -13,6 +13,7 @@ class Spdctrl(SpdController):
         self.cv_Raio = 0.4
         self.cv_Dist = -5
         self.steer_mode = ""
+        self.cruise_gap = 0.0
 
     def update_lead(self, CS,  dRel, yRel, vRel):
         lead_set_speed = int(round(self.cruise_set_speed_kph))
@@ -147,8 +148,11 @@ class Spdctrl(SpdController):
         elif CS.out.cruiseState.modeSel == 3:
             self.steer_mode = "편도1차선"
 
+        if self.cruise_gap != CS.cruiseGapSet:
+            self.cruise_gap = CS.cruiseGapSet
+
         str3 = '주행모드={:s}  설정속도={:03.0f}/{:03.0f}  타이머={:03.0f}/{:03.0f}'.format( self.steer_mode, set_speed, CS.VSetDis, long_wait_cmd, self.long_curv_timer )
-        str4 = '  차=D:{:03.0f}/V:{:03.0f}  CG={:1.0f}  구분={:s}'.format(  CS.lead_distance, CS.lead_objspd, CS.cruiseGapSet, self.seq_step_debug )
+        str4 = '  차=D:{:03.0f}/V:{:03.0f}  CG={:1.0f}  구분={:s}'.format(  CS.lead_distance, CS.lead_objspd, self.cruise_gap, self.seq_step_debug )
 
         str5 = str3 + str4
         trace1.printf2( str5 )
