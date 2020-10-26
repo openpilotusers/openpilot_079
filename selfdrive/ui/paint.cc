@@ -1114,12 +1114,12 @@ static void bb_ui_draw_UI(UIState *s)
 
 static void ui_draw_vision_car(UIState *s) {
   const UIScene *scene = &s->scene;
-  const int car_size = 250;
-  const int car_x_left = (scene->viz_rect.centerX() - 500);
-  const int car_x_right = (scene->viz_rect.centerX() + 500);
+  const int car_size = 200;
+  const int car_x_left = (scene->viz_rect.centerX() - 550);
+  const int car_x_right = (scene->viz_rect.centerX() + 550);
   const int car_y = 700;
   const int car_img_size_w = (car_size * 1);
-  const int car_img_size_h = (car_size * 1.17);
+  const int car_img_size_h = (car_size * 1);
   const int car_img_x_left = (car_x_left - (car_img_size_w / 2));
   const int car_img_x_right = (car_x_right - (car_img_size_w / 2));
   const int car_img_y = (car_y - (car_size / 4));
