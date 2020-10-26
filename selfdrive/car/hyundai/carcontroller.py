@@ -315,10 +315,10 @@ class CarController():
           self.resume_cnt = 0
           self.resume_wait_timer = int(0.25 / DT_CTRL)
 
-      elif self.cruise_gap_prev == 0: 
+      elif self.cruise_gap_prev == 0 and run_speed_ctrl: 
         self.cruise_gap_prev = CS.cruiseGapSet
         self.cruise_gap_set_init = 1
-      elif CS.cruiseGapSet != 1.0:
+      elif CS.cruiseGapSet != 1.0 and run_speed_ctrl:
         self.cruise_gap_switch_timer += 1
         if self.cruise_gap_switch_timer > 100:
           can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.GAP_DIST, clu11_speed))
