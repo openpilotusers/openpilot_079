@@ -580,7 +580,7 @@ def main():
     ("CommunityFeaturesToggle", "0"),
     ("CompletedTrainingVersion", "0"),
     ("IsRHD", "0"),
-    ("IsMetric", "0"),
+    ("IsMetric", "1"),
     ("RecordFront", "0"),
     ("HasAcceptedTerms", "0"),
     ("HasCompletedSetup", "0"),
