@@ -570,27 +570,33 @@ static void ui_draw_debug(UIState *s)
   UIScene &scene = s->scene;
 
   int ui_viz_rx = scene.viz_rect.x + 300;
-  int ui_viz_ry = 108; 
+  int ui_viz_ry = 108;
+  int ui_viz_rx_center = scene.viz_rect.centerX();
   
   nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
   if (s->scene.params.nDebugUi1 == 1) {
-    ui_draw_text(s->vg, 0, 1024, scene.alertTextMsg1.c_str(), 50, COLOR_WHITE_ALPHA(200), s->font_sans_semibold);
-    ui_draw_text(s->vg, 0, 1078, scene.alertTextMsg2.c_str(), 50, COLOR_WHITE_ALPHA(200), s->font_sans_semibold);
+    ui_draw_text(s->vg, 0, 1024, scene.alertTextMsg1.c_str(), 50, COLOR_WHITE_ALPHA(150), s->font_sans_semibold);
+    ui_draw_text(s->vg, 0, 1078, scene.alertTextMsg2.c_str(), 50, COLOR_WHITE_ALPHA(150), s->font_sans_semibold);
   }
 
   nvgFontSize(s->vg, 45);
+  nvgFillColor(s->vg, COLOR_WHITE_ALPHA(150));
   if (s->scene.params.nDebugUi2 == 1) {
-  ui_print( s, ui_viz_rx, ui_viz_ry+0,   "sR:%.2f, %.2f", scene.liveParams.steerRatio, scene.pathPlan.steerRatio );
-  ui_print( s, ui_viz_rx, ui_viz_ry+50,  "aO:%.2f, %.2f", scene.liveParams.angleOffset, scene.pathPlan.angleOffset );
-  ui_print( s, ui_viz_rx, ui_viz_ry+100, "aA:%.2f", scene.liveParams.angleOffsetAverage );
-  ui_print( s, ui_viz_rx, ui_viz_ry+150, "sF:%.2f", scene.liveParams.stiffnessFactor );
-  ui_print( s, ui_viz_rx, ui_viz_ry+200, "aD:%.2f", scene.pathPlan.steerActuatorDelay );
-  ui_print( s, ui_viz_rx, ui_viz_ry+250, "lW:%.2f", scene.pathPlan.laneWidth );
-  ui_print( s, ui_viz_rx, ui_viz_ry+300, "prob:%.2f, %.2f", scene.pathPlan.lProb, scene.pathPlan.rProb );
-  ui_print( s, ui_viz_rx, ui_viz_ry+350, "Poly:%.2f, %.2f", scene.pathPlan.lPoly, scene.pathPlan.rPoly );
-  ui_print( s, ui_viz_rx, ui_viz_ry+400, "curv:%.4f", scene.curvature );
-  ui_print( s, ui_viz_rx, ui_viz_ry+450, "awareness:%.2f" , scene.awareness_status);
+    ui_print(s, ui_viz_rx, ui_viz_ry, "Live Parameters");
+    ui_print(s, ui_viz_rx, ui_viz_ry+50, "·SR:%.2f", scene.liveParams.steerRatio);
+    ui_print(s, ui_viz_rx, ui_viz_ry+100, "·AOfs:%.2f", scene.liveParams.angleOffset);
+    ui_print(s, ui_viz_rx, ui_viz_ry+150, "·AOAVG:%.2f", scene.liveParams.angleOffsetAverage);
+    ui_print(s, ui_viz_rx, ui_viz_ry+200, "·SFact:%.2f", scene.liveParams.stiffnessFactor);
+
+    ui_print(s, ui_viz_rx, ui_viz_ry+300, "ADelay:%.2f", scene.pathPlan.steerActuatorDelay);
+    ui_print(s, ui_viz_rx, ui_viz_ry+350, "OutScale:%.3f", scene.output_scale);
+    ui_print(s, ui_viz_rx, ui_viz_ry+400, "Awareness:%.2f", scene.awareness_status);
+    nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
+    ui_print(s, ui_viz_rx_center, ui_viz_ry+650, "curvature");
+    ui_print(s, ui_viz_rx_center, ui_viz_ry+700, "%.4f", scene.curvature);
+    ui_print(s, ui_viz_rx_center, ui_viz_ry+750, " LeftPoly(%%)    LaneWidth    RightPoly(%%)");
+    ui_print(s, ui_viz_rx_center, ui_viz_ry+800, "%4.1f                    %4.2f                    %4.1f", (scene.pathPlan.lPoly/(scene.pathPlan.lPoly+abs(scene.pathPlan.rPoly)))*100, scene.pathPlan.laneWidth, (abs(scene.pathPlan.rPoly)/(scene.pathPlan.lPoly+abs(scene.pathPlan.rPoly)))*100); 
   }
 }
 
@@ -1114,12 +1120,12 @@ static void bb_ui_draw_UI(UIState *s)
 
 static void ui_draw_vision_car(UIState *s) {
   const UIScene *scene = &s->scene;
-  const int car_size = 250;
-  const int car_x_left = (scene->viz_rect.centerX() - 500);
-  const int car_x_right = (scene->viz_rect.centerX() + 500);
-  const int car_y = 700;
+  const int car_size = 350;
+  const int car_x_left = (scene->viz_rect.centerX() - 400);
+  const int car_x_right = (scene->viz_rect.centerX() + 400);
+  const int car_y = 500;
   const int car_img_size_w = (car_size * 1);
-  const int car_img_size_h = (car_size * 1.17);
+  const int car_img_size_h = (car_size * 1);
   const int car_img_x_left = (car_x_left - (car_img_size_w / 2));
   const int car_img_x_right = (car_x_right - (car_img_size_w / 2));
   const int car_img_y = (car_y - (car_size / 4));
@@ -1127,32 +1133,33 @@ static void ui_draw_vision_car(UIState *s) {
   bool car_valid_left = scene->leftblindspot;
   bool car_valid_right = scene->rightblindspot;
   float car_img_alpha;
-
-  if(car_valid_left || car_valid_right) {
-    s->scene.blindspot_blinkingrate -= 6;
-    if(scene->blindspot_blinkingrate<0) s->scene.blindspot_blinkingrate = 120;
-    if (scene->blindspot_blinkingrate>=60) {
-      car_img_alpha = 0.6f;
-    } else {
-      car_img_alpha = 0.0f;
+  if (s->scene.params.nOpkrBlindSpotDetect == 1) {
+    if(car_valid_left || car_valid_right) {
+      s->scene.blindspot_blinkingrate -= 6;
+      if(scene->blindspot_blinkingrate<0) s->scene.blindspot_blinkingrate = 120;
+      if (scene->blindspot_blinkingrate>=60) {
+        car_img_alpha = 0.6f;
+      } else {
+        car_img_alpha = 0.0f;
+      }
     }
-  }
 
-  if(car_valid_left) {
-    NVGpaint car_img_left = nvgImagePattern(s->vg, car_img_x_left, car_img_y,
-      car_img_size_w, car_img_size_h, 0, s->img_car_left, car_img_alpha);
-    nvgBeginPath(s->vg);
-    nvgRect(s->vg, car_img_x_left, car_img_y, car_img_size_w, car_img_size_h);
-    nvgFillPaint(s->vg, car_img_left);
-    nvgFill(s->vg);
-  }
-  if(car_valid_right) {
-    NVGpaint car_img_right = nvgImagePattern(s->vg, car_img_x_right, car_img_y,
-      car_img_size_w, car_img_size_h, 0, s->img_car_right, car_img_alpha);
-    nvgBeginPath(s->vg);
-    nvgRect(s->vg, car_img_x_right, car_img_y, car_img_size_w, car_img_size_h);
-    nvgFillPaint(s->vg, car_img_right);
-    nvgFill(s->vg);
+    if(car_valid_left) {
+      NVGpaint car_img_left = nvgImagePattern(s->vg, car_img_x_left, car_img_y,
+        car_img_size_w, car_img_size_h, 0, s->img_car_left, car_img_alpha);
+      nvgBeginPath(s->vg);
+      nvgRect(s->vg, car_img_x_left, car_img_y, car_img_size_w, car_img_size_h);
+      nvgFillPaint(s->vg, car_img_left);
+      nvgFill(s->vg);
+    }
+    if(car_valid_right) {
+      NVGpaint car_img_right = nvgImagePattern(s->vg, car_img_x_right, car_img_y,
+        car_img_size_w, car_img_size_h, 0, s->img_car_right, car_img_alpha);
+      nvgBeginPath(s->vg);
+      nvgRect(s->vg, car_img_x_right, car_img_y, car_img_size_w, car_img_size_h);
+      nvgFillPaint(s->vg, car_img_right);
+      nvgFill(s->vg);
+    }
   }
 }
 

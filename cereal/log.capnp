@@ -558,6 +558,7 @@ struct ControlsState @0x97ff69c53601abf1 {
   steerSaturated @60 :Bool;
   alertTextMsg1  @61 :Text;
   alertTextMsg2  @62 :Text;
+  lateralControlMethod  @63 :UInt8;
 
   lateralControlState :union {
     indiState @52 :LateralINDIState;

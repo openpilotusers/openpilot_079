@@ -171,6 +171,7 @@ int main(int argc, char* argv[]) {
       case 3: ui_get_params( "OpkrUIVolumeBoost", &s->scene.params.nOpkrUIVolumeBoost ); break;
       case 4: ui_get_params( "DebugUi1", &s->scene.params.nDebugUi1 ); break;
       case 5: ui_get_params( "DebugUi2", &s->scene.params.nDebugUi2 ); break;
+      case 6: ui_get_params( "OpkrBlindSpotDetect", &s->scene.params.nOpkrBlindSpotDetect ); break;
       default: nParamRead = 0; break;
     }
 

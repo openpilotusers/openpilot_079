@@ -154,6 +154,7 @@ keys = {
   "RightCurvOffsetAdj": [TxType.PERSISTENT],
   "DebugUi1": [TxType.PERSISTENT],
   "DebugUi2": [TxType.PERSISTENT],
+  "OpkrBlindSpotDetect": [TxType.PERSISTENT],
 }
 
 
