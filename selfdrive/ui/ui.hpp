@@ -149,6 +149,7 @@ typedef struct UIScene {
   float tpmsPressureFr;
   float tpmsPressureRl;
   float tpmsPressureRr;
+  int lateralControlMethod;
 
   cereal::HealthData::HwType hwType;
   int satelliteCount;
@@ -200,6 +201,7 @@ typedef struct UIScene {
     int nOpkrUIVolumeBoost;
     int nDebugUi1;
     int nDebugUi2;
+    int nOpkrBlindSpotDetect;
   } params;
 } UIScene;
 

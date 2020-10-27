@@ -128,8 +128,17 @@ void update_sockets(UIState *s) {
     scene.controls_state = event.getControlsState();
 
     s->scene.angleSteers = scene.controls_state.getAngleSteers();
-    s->scene.steerOverride= scene.controls_state.getSteerOverride();
-    s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
+    s->scene.steerOverride = scene.controls_state.getSteerOverride();
+
+    s->scene.lateralControlMethod = scene.controls_state.getLateralControlMethod();
+    if (s->scene.lateralControlMethod == 0) {
+      s->scene.output_scale = scene.controls_state.getLateralControlState().getPidState().getOutput();
+    } else if (s->scene.lateralControlMethod == 1) {
+      s->scene.output_scale = scene.controls_state.getLateralControlState().getIndiState().getOutput();
+    } else if (s->scene.lateralControlMethod == 2) {
+      s->scene.output_scale = scene.controls_state.getLateralControlState().getLqrState().getOutput();
+    }
+    
     s->scene.angleSteersDes = scene.controls_state.getAngleSteersDes();
     s->scene.curvature = scene.controls_state.getCurvature();
 

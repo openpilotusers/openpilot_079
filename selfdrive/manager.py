@@ -639,6 +639,7 @@ def main():
     ("RightCurvOffsetAdj", "0"),
     ("DebugUi1", "0"),
     ("DebugUi2", "0"),
+    ("OpkrBlindSpotDetect", "1"),
   ]
 
   # set unset params
