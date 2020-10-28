@@ -88,7 +88,7 @@ class LanePlanner():
     mode_select = sm['carState'].cruiseState.modeSel
     Curv = round(curvature, 3)
 
-    if mode_select == 3:
+    if mode_select == 3 and v_ego > 8:
       if curvature >= 0.001: # left curve
         if Curv > 0.006:
           Curv = 0.006
@@ -103,7 +103,7 @@ class LanePlanner():
       self.l_poly[3] += CAMERA_OFFSET_A + lean_offset
       self.r_poly[3] += CAMERA_OFFSET_A + lean_offset
 
-    elif int(Params().get('LeftCurvOffsetAdj')) != 0 or int(Params().get('RightCurvOffsetAdj')) != 0:
+    elif (int(Params().get('LeftCurvOffsetAdj')) != 0 or int(Params().get('RightCurvOffsetAdj')) != 0) and v_ego > 8:
       leftCurvOffsetAdj = int(Params().get('LeftCurvOffsetAdj'))
       rightCurvOffsetAdj = int(Params().get('RightCurvOffsetAdj'))
       if curvature >= 0.001 and leftCurvOffsetAdj < 0: # left curve
