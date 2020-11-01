@@ -12,7 +12,7 @@ class MoveAvg():
     def __del__(self):
         self.data_steer.clear()        
 
-    def get_data(self, steer_angle_dest, max_cnt ):
+    def get_avg(self, steer_angle_dest, max_cnt ):
         self.data_steer.append( steer_angle_dest )
         self.data_cnt += 1
 
