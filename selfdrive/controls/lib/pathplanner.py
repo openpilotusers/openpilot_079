@@ -109,16 +109,22 @@ class PathPlanner():
     angle_steers = sm['carState'].steeringAngle
     active = sm['controlsState'].active
 
-    saturated_steering = sm['controlsState'].steerSaturated
-    live_steerratio = sm['liveParameters'].steerRatio
+    #saturated_steering = sm['controlsState'].steerSaturated
+    #live_steerratio = sm['liveParameters'].steerRatio
     mode_select = sm['carState'].cruiseState.modeSel
-
+    lateral_control_method = sm['controlsState'].lateralControlMethod
+    if lateral_control_method == 0:
+      output_scale = sm['controlsState'].lateralControlState.pidState.output
+    elif lateral_control_method == 1:
+      output_scale = sm['controlsState'].lateralControlState.indiState.output
+    elif lateral_control_method == 2:
+      output_scale = sm['controlsState'].lateralControlState.lqrState.output
     angle_offset = sm['liveParameters'].angleOffset
 
     # Run MPC
     self.angle_steers_des_prev = self.angle_steers_des_mpc
 
-    if saturated_steering:
+    if output_scale > 0.8:
       self.mpc_frame += 1
       if self.mpc_frame % 10 == 0:
         self.new_steerRatio += 0.1
