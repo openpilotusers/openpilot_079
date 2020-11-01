@@ -86,6 +86,7 @@ class CarController():
     self.resume_cnt = 0
     self.last_lead_distance = 0
     self.resume_wait_timer = 0
+    self.last_resume_frame = 0
     self.lanechange_manual_timer = 0
     self.emergency_manual_timer = 0
     self.driver_steering_torque_above_timer = 0
@@ -96,6 +97,9 @@ class CarController():
     self.mode_change_switch = int(self.params.get('CruiseStatemodeSelInit'))
     self.opkr_variablecruise = int(self.params.get('OpkrVariableCruise'))
     self.opkr_autoresume = int(self.params.get('OpkrAutoResume'))
+    self.opkr_autoresumeoption = int(self.params.get('OpkrAutoResumeOption'))
+
+    self.opkr_maxanglelimit = int(self.params.get('OpkrMaxAngleLimit'))
 
     self.steer_mode = ""
     self.mdps_status = ""
@@ -108,9 +112,9 @@ class CarController():
     self.model_speed = 0
     self.model_sum = 0
 
-    self.dRel = 0
-    self.yRel = 0
-    self.vRel = 0
+    self.dRele = 0
+    self.yRele = 0
+    self.vRele = 0
 
     self.cruise_gap = 0.0
     self.cruise_gap_prev = 0
@@ -146,9 +150,12 @@ class CarController():
     apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady)
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
 
-    self.dRel, self.yRel, self.vRel = SpdController.get_lead(sm)
     self.model_speed, self.model_sum = self.SC.calc_va(sm, CS.out.vEgo)
 
+    plan = sm['plan']
+    self.dRele = plan.ddRel #EON Lead
+    self.yRele = plan.yyRel #EON Lead
+    self.vRele = plan.vvRel #EON Lead
 
     # Steering Torque
     if self.driver_steering_torque_above_timer:
@@ -175,9 +182,10 @@ class CarController():
     spas_active = CS.spas_enabled and enabled and (self.spas_always or CS.out.vEgo < 7.0) # 25km/h
 
     # disable if steer angle reach 90 deg, otherwise mdps fault in some models
-    # temporarily disable steering when LKAS button off 
-    #lkas_active = enabled and abs(CS.out.steeringAngle) < 90. and not spas_active
-    lkas_active = enabled and abs(CS.out.steeringAngle) < 90. and not spas_active
+    if self.opkr_maxanglelimit >= 90:
+      lkas_active = enabled and abs(CS.out.steeringAngle) < self.opkr_maxanglelimit and not spas_active
+    else:
+      lkas_active = enabled and not spas_active
 
     if (( CS.out.leftBlinker and not CS.out.rightBlinker) or ( CS.out.rightBlinker and not CS.out.leftBlinker)) and CS.out.vEgo < LANE_CHANGE_SPEED_MIN:
       self.lanechange_manual_timer = 10
@@ -299,30 +307,49 @@ class CarController():
       can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.CANCEL, clu11_speed))
 
     if CS.out.cruiseState.standstill:
-      if self.last_lead_distance == 0 or not self.opkr_autoresume:
-        self.last_lead_distance = CS.lead_distance
-        self.resume_cnt = 0
-        self.resume_wait_timer = 0
-
-      elif self.resume_wait_timer > 0:
-        self.resume_wait_timer -= 1
-
-      elif CS.lead_distance != self.last_lead_distance:
-        can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.RES_ACCEL, clu11_speed))
-        self.resume_cnt += 1
-
-        if self.resume_cnt > 5:
+      if self.opkr_autoresumeoption == 1:
+        if self.last_lead_distance == 0 or not self.opkr_autoresume:
+          self.last_lead_distance = CS.lead_distance
           self.resume_cnt = 0
-          self.resume_wait_timer = int(0.25 / DT_CTRL)
-
-      elif self.cruise_gap_prev == 0 and run_speed_ctrl: 
-        self.cruise_gap_prev = CS.cruiseGapSet
-        self.cruise_gap_set_init = 1
-      elif CS.cruiseGapSet != 1.0 and run_speed_ctrl:
-        self.cruise_gap_switch_timer += 1
-        if self.cruise_gap_switch_timer > 100:
-          can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.GAP_DIST, clu11_speed))
-          self.cruise_gap_switch_timer = 0
+          self.resume_wait_timer = 0
+        elif self.resume_wait_timer > 0:
+          self.resume_wait_timer -= 1
+        elif CS.lead_distance != self.last_lead_distance:
+          can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.RES_ACCEL, clu11_speed))
+          self.resume_cnt += 1
+          if self.resume_cnt > 5:
+            self.resume_cnt = 0
+            self.resume_wait_timer = int(0.25 / DT_CTRL)
+        elif self.cruise_gap_prev == 0 and run_speed_ctrl: 
+          self.cruise_gap_prev = CS.cruiseGapSet
+          self.cruise_gap_set_init = 1
+        elif CS.cruiseGapSet != 1.0 and run_speed_ctrl:
+          self.cruise_gap_switch_timer += 1
+          if self.cruise_gap_switch_timer > 100:
+            can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.GAP_DIST, clu11_speed))
+            self.cruise_gap_switch_timer = 0
+      else:
+        # run only first time when the car stopped
+        if self.last_lead_distance == 0 or not self.opkr_autoresume:
+          # get the lead distance from the Radar
+          self.last_lead_distance = CS.lead_distance
+          self.resume_cnt = 0
+        # when lead car starts moving, create 6 RES msgs
+        elif CS.lead_distance != self.last_lead_distance and (frame - self.last_resume_frame) > 5:
+          can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.RES_ACCEL, clu11_speed))
+          self.resume_cnt += 1
+          # interval after 6 msgs
+          if self.resume_cnt > 5:
+            self.last_resume_frame = frame
+            self.resume_cnt = 0
+        elif self.cruise_gap_prev == 0: 
+          self.cruise_gap_prev = CS.cruiseGapSet
+          self.cruise_gap_set_init = 1
+        elif CS.cruiseGapSet != 1.0:
+          self.cruise_gap_switch_timer += 1
+          if self.cruise_gap_switch_timer > 100:
+            can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.GAP_DIST, clu11_speed))
+            self.cruise_gap_switch_timer = 0
 
     # reset lead distnce after the car starts moving
     elif self.last_lead_distance != 0:
@@ -334,7 +361,7 @@ class CarController():
         self.resume_cnt += 1
       else:
         self.resume_cnt = 0
-      if self.dRel > 17 and self.cruise_gap_prev != CS.cruiseGapSet and self.cruise_gap_set_init == 1:
+      if self.dRele > 18 and self.cruise_gap_prev != CS.cruiseGapSet and self.cruise_gap_set_init == 1:
         self.cruise_gap_switch_timer += 1
         if self.cruise_gap_switch_timer > 50:
           can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.GAP_DIST, clu11_speed))

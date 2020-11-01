@@ -47,6 +47,7 @@ last_eon_fan_val = None
 
 mediaplayer = '/data/openpilot/selfdrive/assets/addon/mediaplayer/'
 prebuiltfile = '/data/openpilot/prebuilt'
+pandaflash_ongoing = '/data/openpilot/pandaflash_ongoing'
 
 def get_thermal_config():
   # (tz, scale)
@@ -230,14 +231,15 @@ def thermald_thread():
 
   thermal_config = get_thermal_config()
 
-  IsOpenpilotViewEnabled = 0
-
   ts_last_ip = 0
   ip_addr = '255.255.255.255'
 
   # sound trigger
   sound_trigger = 1
   opkrAutoShutdown = 0
+
+  shutdown_trigger = 1
+  is_openpilot_view_enabled = 0
 
   env = dict(os.environ)
   env['LD_LIBRARY_PATH'] = mediaplayer
@@ -284,9 +286,11 @@ def thermald_thread():
           if ignition:
             cloudlog.error("Lost panda connection while onroad")
           ignition = False
+          shutdown_trigger = 1
       else:
         no_panda_cnt = 0
         ignition = health.health.ignitionLine or health.health.ignitionCan
+        sound_trigger == 1
 
       # Setup fan handler on first connect to panda
       if handle_fan is None and health.health.hwType != log.HealthData.HwType.unknown:
@@ -307,9 +311,15 @@ def thermald_thread():
           health_prev.health.hwType != log.HealthData.HwType.unknown:
           params.panda_disconnect()
       health_prev = health
-    elif ignition == False or IsOpenpilotViewEnabled:
-      IsOpenpilotViewEnabled = int( params.get("IsOpenpilotViewEnabled") )      
-      ignition = IsOpenpilotViewEnabled
+
+    elif int(params.get("IsOpenpilotViewEnabled")) == 1 and int(params.get("IsDriverViewEnabled")) == 0 and is_openpilot_view_enabled == 0:
+      is_openpilot_view_enabled = 1
+      ignition = True
+    elif int(params.get("IsOpenpilotViewEnabled")) == 0 and int(params.get("IsDriverViewEnabled")) == 0 and is_openpilot_view_enabled == 1:
+      shutdown_trigger = 0
+      sound_trigger == 0
+      is_openpilot_view_enabled = 0
+      ignition = False
 
     # get_network_type is an expensive call. update every 10s
     if (count % int(10. / DT_TRML)) == 0:
@@ -496,13 +506,13 @@ def thermald_thread():
         off_ts = sec_since_boot()
         os.system('echo powersave > /sys/class/devfreq/soc:qcom,cpubw/governor')
 
-      if sound_trigger == 1 and msg.thermal.batteryStatus == "Discharging" and started_seen and (sec_since_boot() - off_ts) > 1 and getoff_alert:
+      if shutdown_trigger == 1 and sound_trigger == 1 and msg.thermal.batteryStatus == "Discharging" and started_seen and (sec_since_boot() - off_ts) > 1 and getoff_alert:
         subprocess.Popen([mediaplayer + 'mediaplayer', '/data/openpilot/selfdrive/assets/sounds/eondetach.wav'], shell = False, stdin=None, stdout=None, stderr=None, env = env, close_fds=True)
         sound_trigger = 0
       # shutdown if the battery gets lower than 3%, it's discharging, we aren't running for
       # more than a minute but we were running
-      if msg.thermal.batteryStatus == "Discharging" and \
-         started_seen and opkrAutoShutdown and (sec_since_boot() - off_ts) > opkrAutoShutdown:
+      if shutdown_trigger == 1 and msg.thermal.batteryStatus == "Discharging" and \
+         started_seen and opkrAutoShutdown and (sec_since_boot() - off_ts) > opkrAutoShutdown and not os.path.isfile(pandaflash_ongoing):
         os.system('LD_LIBRARY_PATH="" svc power shutdown')
 
     charging_disabled = check_car_battery_voltage(should_start, health, charging_disabled, msg)

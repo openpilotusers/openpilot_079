@@ -193,6 +193,7 @@ struct CarState {
   tpmsPressureFr @38 :Float32;
   tpmsPressureRl @39 :Float32;
   tpmsPressureRr @40 :Float32;
+  radarDistance @41 :Float32;
 
   struct WheelSpeeds {
     # optional wheel speeds

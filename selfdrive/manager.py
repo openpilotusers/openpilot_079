@@ -591,7 +591,7 @@ def main():
     ("LaneChangeEnabled", "1"),
     ("IsDriverViewEnabled", "0"),
     ("IsOpenpilotViewEnabled", "0"),
-    ("OpkrAutoShutdown", "2"),
+    ("OpkrAutoShutdown", "3"),
     ("OpkrAutoScreenOff", "0"),
     ("OpkrUIBrightness", "0"),
     ("OpkrEnableDriverMonitoring", "1"),
@@ -639,7 +639,9 @@ def main():
     ("RightCurvOffsetAdj", "0"),
     ("DebugUi1", "0"),
     ("DebugUi2", "0"),
-    ("OpkrBlindSpotDetect", "1"),
+    ("OpkrBlindSpotDetect", "0"),
+    ("OpkrMaxAngleLimit", "90"),
+    ("OpkrAutoResumeOption", "0"),
   ]
 
   # set unset params

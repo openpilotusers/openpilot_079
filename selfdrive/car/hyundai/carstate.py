@@ -223,6 +223,7 @@ class CarState(CarStateBase):
     self.steer_state = cp_mdps.vl["MDPS12"]['CF_Mdps_ToiActive'] #0 NOT ACTIVE, 1 ACTIVE
     self.cruise_unavail = cp.vl["TCS13"]['CF_VSM_Avail'] != 1
     self.lead_distance = cp_scc.vl["SCC11"]['ACC_ObjDist'] if not self.no_radar else 0
+    ret.radarDistance = cp_scc.vl["SCC11"]['ACC_ObjDist'] if not self.no_radar else 0
     self.lkas_error = cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"] == 7
     if not self.lkas_error:
       self.lkas_button_on = cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"]
