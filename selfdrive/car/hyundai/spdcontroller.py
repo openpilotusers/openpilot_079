@@ -201,19 +201,19 @@ class SpdController():
 
 
     @staticmethod
-    def get_lead( sm, CC ):
+    def get_lead( sm ):
         lead_msg = sm['model'].lead
         if lead_msg.prob > 0.5:
-            dRele = CC.dRele
-            yRele = CC.yRele
-            vRele = CC.vRele
+            dRel = float(lead_msg.dist - RADAR_TO_CAMERA)
+            yRel = float(lead_msg.relY)
+            vRel = float(lead_msg.relVel)
         else:
-            dRele = 150
-            yRele = 0
-            vRele = 0
+            dRel = 150
+            yRel = 0
+            vRel = 0
 
 
-        return dRele, yRele, vRele
+        return dRel, yRel, vRel
 
 
 
@@ -248,9 +248,9 @@ class SpdController():
         trace1.printf2( str5 )
 
     def lead_control(self, CS, sm, CC ):
-        dRele = CC.dRele
-        yRele = CC.yRele
-        vRele = CC.vRele
+        dRel = CC.dRel
+        yRel = CC.yRel
+        vRel = CC.vRel
         active_time = 10
         btn_type = Buttons.NONE
         #lead_1 = sm['radarState'].leadOne
@@ -262,7 +262,7 @@ class SpdController():
 
 
         # 선행 차량 거리유지
-        lead_wait_cmd, lead_set_speed = self.update_lead( CS, CC, dRele, yRele, vRele)
+        lead_wait_cmd, lead_set_speed = self.update_lead( CS, dRel, yRel, vRel)
 
         # 커브 감속.
         model_speed = CC.model_speed   #calc_va( CS.out.vEgo )

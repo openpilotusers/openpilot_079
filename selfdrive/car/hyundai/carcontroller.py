@@ -112,9 +112,9 @@ class CarController():
     self.model_speed = 0
     self.model_sum = 0
 
-    self.dRele = 0
-    self.yRele = 0
-    self.vRele = 0
+    self.dRel = 0
+    self.yRel = 0
+    self.vRel = 0
 
     self.cruise_gap = 0.0
     self.cruise_gap_prev = 0
@@ -150,12 +150,9 @@ class CarController():
     apply_accel, self.accel_steady = accel_hysteresis(apply_accel, self.accel_steady)
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
 
+    self.dRel, self.yRel, self.vRel = SpdController.get_lead(sm)
     self.model_speed, self.model_sum = self.SC.calc_va(sm, CS.out.vEgo)
 
-    plan = sm['plan']
-    self.dRele = plan.ddRel #EON Lead
-    self.yRele = plan.yyRel #EON Lead
-    self.vRele = plan.vvRel #EON Lead
 
     # Steering Torque
     if self.driver_steering_torque_above_timer:
@@ -361,7 +358,7 @@ class CarController():
         self.resume_cnt += 1
       else:
         self.resume_cnt = 0
-      if self.dRele > 18 and self.cruise_gap_prev != CS.cruiseGapSet and self.cruise_gap_set_init == 1:
+      if self.dRel > 18 and self.cruise_gap_prev != CS.cruiseGapSet and self.cruise_gap_set_init == 1:
         self.cruise_gap_switch_timer += 1
         if self.cruise_gap_switch_timer > 50:
           can_sends.append(create_clu11(self.packer, frame, CS.scc_bus, CS.clu11, Buttons.GAP_DIST, clu11_speed))
