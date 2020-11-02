@@ -124,7 +124,7 @@ class PathPlanner():
     # Run MPC
     self.angle_steers_des_prev = self.angle_steers_des_mpc
 
-    if output_scale > 0.8:
+    if abs(output_scale) >= 1 and v_ego > 8:
       self.mpc_frame += 1
       if self.mpc_frame % 10 == 0:
         self.new_steerRatio += 0.1
