@@ -205,8 +205,8 @@ class SpdController():
         lead_msg = sm['model'].lead
         if lead_msg.prob > 0.5:
             dRele = CC.dRele
-            yRele = CC.dRele
-            vRele = CC.dRele
+            yRele = CC.yRele
+            vRele = CC.vRele
         else:
             dRele = 150
             yRele = 0
