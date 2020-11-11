@@ -83,7 +83,7 @@ class CarInterfaceBase():
     raise NotImplementedError
 
   # return sendcan, pass in a car.CarControl
-  def apply(self, c):
+  def apply(self, c, sm):
     raise NotImplementedError
 
   def create_common_events(self, cs_out, extra_gears=[], gas_resume_speed=-1, pcm_enable=True):  # pylint: disable=dangerous-default-value
@@ -93,12 +93,12 @@ class CarInterfaceBase():
       events.add(EventName.doorOpen)
     if cs_out.seatbeltUnlatched:
       events.add(EventName.seatbeltNotLatched)
-    if cs_out.gearShifter != GearShifter.drive and cs_out.gearShifter not in extra_gears:
+    if cs_out.gearShifter != GearShifter.drive and cs_out.gearShifter not in extra_gears and cs_out.cruiseState.enabled:
       events.add(EventName.wrongGear)
     if cs_out.gearShifter == GearShifter.reverse:
       events.add(EventName.reverseGear)
-    #if not cs_out.cruiseState.available:
-    #  events.add(EventName.wrongCarMode)
+    if not cs_out.cruiseState.available and cs_out.cruiseState.enabled:
+      events.add(EventName.wrongCarMode)
     if cs_out.espDisabled:
       events.add(EventName.espDisabled)
     #if cs_out.gasPressed:
