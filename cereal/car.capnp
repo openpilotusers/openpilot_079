@@ -123,8 +123,7 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     modeChangeOpenpilot @97;
     modeChangeDistcurv @98;
     modeChangeDistance @99;
-    modeChangeTrafficjam @100;
-    modeChangeStock @101;
+    modeChangeOneway @100;
   }
 }
 
@@ -192,6 +191,11 @@ struct CarState {
   leftBlindspot @33 :Bool; # Is there something blocking the left lane change
   rightBlindspot @34 :Bool; # Is there something blocking the right lane change
 
+  # tpms 
+  tpmsPressureFl @37 :Float32;
+  tpmsPressureFr @38 :Float32;
+  tpmsPressureRl @39 :Float32;
+  tpmsPressureRr @40 :Float32;
   struct WheelSpeeds {
     # optional wheel speeds
     fl @0 :Float32;
@@ -364,7 +368,7 @@ struct CarControl {
       chimeModeOpenpilot @19;
       chimeModeDistcurv @20;
       chimeModeDistance @21;
-      chimeModeTrafficjam @22;
+      chimeModeOneway @22;
     }
   }
 }

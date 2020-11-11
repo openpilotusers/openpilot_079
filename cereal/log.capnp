@@ -552,6 +552,9 @@ struct ControlsState @0x97ff69c53601abf1 {
   decelForModel @54 :Bool;
   canErrorCounter @57 :UInt32;
 
+  alertTextMsg1  @58 :Text;
+  alertTextMsg2  @59 :Text;
+  lateralControlMethod  @60 :UInt8;
   lateralControlState :union {
     indiState @52 :LateralINDIState;
     pidState @53 :LateralPIDState;
@@ -884,6 +887,7 @@ struct PathPlan {
     preLaneChange @1;
     laneChangeStarting @2;
     laneChangeFinishing @3;
+    laneChangeDone @4;
   }
 
   enum LaneChangeDirection {
