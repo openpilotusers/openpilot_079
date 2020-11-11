@@ -450,18 +450,22 @@ def manager_thread():
   cloudlog.info("manager start")
   cloudlog.info({"environ": os.environ})
 
-  # save boot log
-  subprocess.call(["./loggerd", "--bootlog"], cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
-
   params = Params()
 
-  car_started_processes.remove( 'loggerd' )
-  persistent_processes.remove( 'logmessaged' )
-  persistent_processes.remove( 'uploader' )
-  persistent_processes.remove( 'logcatd' )
-  persistent_processes.remove( 'updated' )
-  persistent_processes.remove( 'deleter' )
-  persistent_processes.remove( 'tombstoned' )
+  EnableLogger = int(params.get('OpkrEnableLogger'))     
+
+  if not EnableLogger:
+    car_started_processes.remove( 'loggerd' )
+    persistent_processes.remove( 'logmessaged' )
+    persistent_processes.remove( 'uploader' )
+    persistent_processes.remove( 'logcatd' )
+    persistent_processes.remove( 'updated' )
+    persistent_processes.remove( 'deleter' )
+    persistent_processes.remove( 'tombstoned' )
+  else:
+    # save boot log
+    subprocess.call(["./loggerd", "--bootlog"], cwd=os.path.join(BASEDIR, "selfdrive/loggerd"))
+
   # start daemon processes
   for p in daemon_processes:
     start_daemon_process(p)
@@ -569,10 +573,10 @@ def main():
   params.manager_start()
 
   default_params = [
-    ("CommunityFeaturesToggle", "1"),
+    ("CommunityFeaturesToggle", "0"),
     ("CompletedTrainingVersion", "0"),
     ("IsRHD", "0"),
-    ("IsMetric", "0"),
+    ("IsMetric", "1"),
     ("RecordFront", "0"),
     ("HasAcceptedTerms", "0"),
     ("HasCompletedSetup", "0"),
@@ -581,13 +585,59 @@ def main():
     ("LastUpdateTime", datetime.datetime.utcnow().isoformat().encode('utf8')),
     ("OpenpilotEnabledToggle", "1"),
     ("LaneChangeEnabled", "1"),
-    ("LongControlEnabled", "0"),
-    ("RadarDisableEnabled", "0"),
-    ("MdpsHarnessEnabled", "0"),
-    ("SccEnabled", "1"),
-    ("EnableOPwithCC", "1"),
-    ("SccHarnessPresent", "0"),
     ("IsDriverViewEnabled", "0"),
+    ("IsOpenpilotViewEnabled", "0"),
+    ("OpkrAutoShutdown", "3"),
+    ("OpkrAutoScreenOff", "0"),
+    ("OpkrUIBrightness", "0"),
+    ("OpkrEnableDriverMonitoring", "1"),
+    ("OpkrEnableLogger", "0"),
+    ("OpkrEnableGetoffAlert", "1"),
+    ("OpkrAutoResume", "1"),
+    ("OpkrVariableCruise", "0"),
+    ("OpkrLaneChangeSpeed", "60"),
+    ("OpkrAutoLaneChangeDelay", "0"),
+    ("OpkrSteerAngleCorrection", "0"),
+    ("PutPrebuiltOn", "0"),
+    ("FingerprintIssuedFix", "0"),
+    ("LdwsCarFix", "0"),
+    ("LateralControlMethod", "0"),
+    ("CruiseStatemodeSelInit", "1"),
+    ("InnerLoopGain", "30"),
+    ("OuterLoopGain", "20"),
+    ("TimeConstant", "10"),
+    ("ActuatorEffectiveness", "15"),
+    ("Scale", "1750"),
+    ("LqrKi", "10"),
+    ("DcGain", "30"),
+    ("IgnoreZone", "0"),
+    ("PidKp", "20"),
+    ("PidKi", "40"),
+    ("PidKf", "5"),
+    ("CameraOffsetAdj", "60"),
+    ("SteerRatioAdj", "135"),
+    ("SteerActuatorDelayAdj", "30"),
+    ("SteerRateCostAdj", "50"),
+    ("SteerLimitTimerAdj", "80"),
+    ("TireStiffnessFactorAdj", "75"),
+    ("SteerMaxAdj", "380"),
+    ("SteerDeltaUpAdj", "3"),
+    ("SteerDeltaDownAdj", "7"),
+    ("SteerMaxvAdj", "10"),
+    ("OpkrBatteryChargingControl", "1"),
+    ("OpkrBatteryChargingMin", "70"),
+    ("OpkrBatteryChargingMax", "80"),
+    ("OpkrUiOpen", "0"),
+    ("OpkrDriveOpen", "0"),
+    ("OpkrTuneOpen", "0"),
+    ("OpkrControlOpen", "0"),
+    ("LeftCurvOffsetAdj", "0"),
+    ("RightCurvOffsetAdj", "0"),
+    ("DebugUi1", "0"),
+    ("DebugUi2", "0"),
+    ("OpkrBlindSpotDetect", "0"),
+    ("OpkrMaxAngleLimit", "90"),
+    ("OpkrAutoResumeOption", "0"),
   ]
 
   # set unset params

@@ -2,6 +2,7 @@ from selfdrive.controls.lib.pid import PIController
 from selfdrive.controls.lib.drive_helpers import get_steer_max
 from cereal import car
 from cereal import log
+from common.params import Params
 
 
 class LatControlPID():
@@ -35,7 +36,7 @@ class LatControlPID():
         # TODO: feedforward something based on path_plan.rateSteers
         steer_feedforward -= path_plan.angleOffset   # subtract the offset, since it does not contribute to resistive torque
         steer_feedforward *= CS.vEgo**2  # proportional to realigning tire momentum (~ lateral accel)
-      deadzone = 0.0
+      deadzone = int(Params().get('IgnoreZone')) * 0.1
 
       check_saturation = (CS.vEgo > 10) and not CS.steeringRateLimited and not CS.steeringPressed
       output_steer = self.pid.update(self.angle_steers_des, CS.steeringAngle, check_saturation=check_saturation, override=CS.steeringPressed,
