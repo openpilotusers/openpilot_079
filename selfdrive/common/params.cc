@@ -348,3 +348,23 @@ bool read_db_bool(const char* param_name, bool persistent_param) {
   std::vector<char> bytes = read_db_bytes(param_name, persistent_param);
   return bytes.size() > 0 and bytes[0] == '1';
 }
+
+int ui_get_params( const char* param_name, int *pValue )
+{
+  char speed_str[512];
+  char *string;
+  int   ret_code = 0;
+
+  const int result = read_db_value( param_name, &string, NULL);
+  if (result == 0) {
+   // bool is_rhd = (string[0] == '1');
+    strcpy( speed_str, string  );
+    free(string);
+
+    ret_code = atol( speed_str );
+    if( pValue )
+      *pValue = ret_code;
+  }
+
+  return result;
+}

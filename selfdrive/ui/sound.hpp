@@ -27,7 +27,7 @@ static std::map<AudibleAlert, std::pair<const char *, int>> sound_map {
   {AudibleAlert::CHIME_MODE_OPENPILOT, {"../assets/sounds/modeopenpilot.wav", 0}},
   {AudibleAlert::CHIME_MODE_DISTCURV, {"../assets/sounds/modedistcurv.wav", 0}},
   {AudibleAlert::CHIME_MODE_DISTANCE, {"../assets/sounds/modedistance.wav", 0}},
-  {AudibleAlert::CHIME_MODE_TRAFFICJAM, {"../assets/sounds/modetrafficjam.wav", 0}}
+  {AudibleAlert::CHIME_MODE_ONEWAY, {"../assets/sounds/modeoneway.wav", 0}}
 };
 
 class Sound {

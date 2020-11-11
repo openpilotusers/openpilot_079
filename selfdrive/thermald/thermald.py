@@ -46,6 +46,8 @@ LEON = False
 last_eon_fan_val = None
 
 mediaplayer = '/data/openpilot/selfdrive/assets/addon/mediaplayer/'
+prebuiltfile = '/data/openpilot/prebuilt'
+pandaflash_ongoing = '/data/openpilot/pandaflash_ongoing'
 
 def get_thermal_config():
   # (tz, scale)
@@ -161,6 +163,9 @@ def handle_fan_uno(max_cpu_temp, bat_temp, fan_speed, ignition):
   return new_speed
 
 def check_car_battery_voltage(should_start, health, charging_disabled, msg):
+  battery_charging_control = Params().get('OpkrBatteryChargingControl') == b'1'
+  battery_charging_min = int(Params().get('OpkrBatteryChargingMin'))
+  battery_charging_max = int(Params().get('OpkrBatteryChargingMax'))
 
   # charging disallowed if:
   #   - there are health packets from panda, and;
@@ -168,17 +173,21 @@ def check_car_battery_voltage(should_start, health, charging_disabled, msg):
   #   - onroad isn't started
   print(health)
   
-  if charging_disabled and (health is None or health.health.voltage > (11800+500)) and msg.thermal.batteryPercent < 70:
+  if charging_disabled and (health is None or health.health.voltage > (11800+500)) and msg.thermal.batteryPercent < battery_charging_min:
     charging_disabled = False
     os.system('echo "1" > /sys/class/power_supply/battery/charging_enabled')
-  elif not charging_disabled and (msg.thermal.batteryPercent > 80 or (health is not None and health.health.voltage < 11800 and not should_start)):
+  elif not charging_disabled and (msg.thermal.batteryPercent > battery_charging_max or (health is not None and health.health.voltage < 11800 and not should_start)):
     charging_disabled = True
     os.system('echo "0" > /sys/class/power_supply/battery/charging_enabled')
-  elif msg.thermal.batteryCurrent < 0 and msg.thermal.batteryPercent > 80:
+  elif msg.thermal.batteryCurrent < 0 and msg.thermal.batteryPercent > battery_charging_max:
     charging_disabled = True
     os.system('echo "0" > /sys/class/power_supply/battery/charging_enabled')
+    
+  if not battery_charging_control:
+    charging_disabled = False
 
   return charging_disabled
+
 
 def thermald_thread():
   health_timeout = int(1000 * 2.5 * DT_TRML)  # 2.5x the expected health frequency
@@ -227,9 +236,38 @@ def thermald_thread():
 
   # sound trigger
   sound_trigger = 1
+  opkrAutoShutdown = 0
+
+  shutdown_trigger = 1
+  is_openpilot_view_enabled = 0
 
   env = dict(os.environ)
   env['LD_LIBRARY_PATH'] = mediaplayer
+
+  getoff_alert = Params().get('OpkrEnableGetoffAlert') == b'1'
+
+  if int(params.get('OpkrAutoShutdown')) == 0:
+    opkrAutoShutdown = 0
+  elif int(params.get('OpkrAutoShutdown')) == 1:
+    opkrAutoShutdown = 5
+  elif int(params.get('OpkrAutoShutdown')) == 2:
+    opkrAutoShutdown = 30
+  elif int(params.get('OpkrAutoShutdown')) == 3:
+    opkrAutoShutdown = 60
+  elif int(params.get('OpkrAutoShutdown')) == 4:
+    opkrAutoShutdown = 180
+  elif int(params.get('OpkrAutoShutdown')) == 5:
+    opkrAutoShutdown = 300
+  elif int(params.get('OpkrAutoShutdown')) == 6:
+    opkrAutoShutdown = 600
+  elif int(params.get('OpkrAutoShutdown')) == 7:
+    opkrAutoShutdown = 1800
+  elif int(params.get('OpkrAutoShutdown')) == 8:
+    opkrAutoShutdown = 3600
+  elif int(params.get('OpkrAutoShutdown')) == 9:
+    opkrAutoShutdown = 10800
+  else:
+    opkrAutoShutdown = 18000
 
   while 1:
     ts = sec_since_boot()
@@ -248,9 +286,11 @@ def thermald_thread():
           if ignition:
             cloudlog.error("Lost panda connection while onroad")
           ignition = False
+          shutdown_trigger = 1
       else:
         no_panda_cnt = 0
         ignition = health.health.ignitionLine or health.health.ignitionCan
+        sound_trigger == 1
 
       # Setup fan handler on first connect to panda
       if handle_fan is None and health.health.hwType != log.HealthData.HwType.unknown:
@@ -271,6 +311,15 @@ def thermald_thread():
           health_prev.health.hwType != log.HealthData.HwType.unknown:
           params.panda_disconnect()
       health_prev = health
+
+    elif int(params.get("IsOpenpilotViewEnabled")) == 1 and int(params.get("IsDriverViewEnabled")) == 0 and is_openpilot_view_enabled == 0:
+      is_openpilot_view_enabled = 1
+      ignition = True
+    elif int(params.get("IsOpenpilotViewEnabled")) == 0 and int(params.get("IsDriverViewEnabled")) == 0 and is_openpilot_view_enabled == 1:
+      shutdown_trigger = 0
+      sound_trigger == 0
+      is_openpilot_view_enabled = 0
+      ignition = False
 
     # get_network_type is an expensive call. update every 10s
     if (count % int(10. / DT_TRML)) == 0:
@@ -457,12 +506,13 @@ def thermald_thread():
         off_ts = sec_since_boot()
         os.system('echo powersave > /sys/class/devfreq/soc:qcom,cpubw/governor')
 
-      if sound_trigger == 1 and msg.thermal.batteryStatus == "Discharging" and started_seen and (sec_since_boot() - off_ts) > 1:
+      if shutdown_trigger == 1 and sound_trigger == 1 and msg.thermal.batteryStatus == "Discharging" and started_seen and (sec_since_boot() - off_ts) > 1 and getoff_alert:
         subprocess.Popen([mediaplayer + 'mediaplayer', '/data/openpilot/selfdrive/assets/sounds/eondetach.wav'], shell = False, stdin=None, stdout=None, stderr=None, env = env, close_fds=True)
         sound_trigger = 0
       # shutdown if the battery gets lower than 3%, it's discharging, we aren't running for
       # more than a minute but we were running
-      if msg.thermal.batteryStatus == "Discharging" and started_seen and (sec_since_boot() - off_ts) > 30:
+      if shutdown_trigger == 1 and msg.thermal.batteryStatus == "Discharging" and \
+         started_seen and opkrAutoShutdown and (sec_since_boot() - off_ts) > opkrAutoShutdown and not os.path.isfile(pandaflash_ongoing):
         os.system('LD_LIBRARY_PATH="" svc power shutdown')
 
     charging_disabled = check_car_battery_voltage(should_start, health, charging_disabled, msg)
@@ -474,6 +524,13 @@ def thermald_thread():
 
     
     msg.thermal.chargingDisabled = charging_disabled
+
+    prebuiltlet = Params().get('PutPrebuiltOn') == b'1'
+    if not os.path.isfile(prebuiltfile) and prebuiltlet:
+      os.system("cd /data/openpilot; touch prebuilt")
+    elif os.path.isfile(prebuiltfile) and not prebuiltlet:
+      os.system("cd /data/openpilot; rm -f prebuilt")
+
     # Offroad power monitoring
     pm.calculate(health)
     msg.thermal.offroadPowerUsage = pm.get_power_used()

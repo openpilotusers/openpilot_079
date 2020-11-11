@@ -5,6 +5,10 @@ from common.filter_simple import FirstOrderFilter
 from common.stat_live import RunningStatFilter
 
 from cereal import car
+from common.params import Params
+
+EnableLogger = int(Params().get('OpkrEnableLogger'))
+EnableDriverMonitoring = int(Params().get('OpkrEnableDriverMonitoring'))
 
 EventName = car.CarEvent.EventName
 
@@ -14,10 +18,16 @@ EventName = car.CarEvent.EventName
 #  We recommend that you do not change these numbers from the defaults.
 # ******************************************************************************************
 
-_AWARENESS_TIME = 70.  # passive wheel touch total timeout
-_AWARENESS_PRE_TIME_TILL_TERMINAL = 15.
-_AWARENESS_PROMPT_TIME_TILL_TERMINAL = 6.
-_DISTRACTED_TIME = 11.
+if not EnableLogger:
+  _AWARENESS_TIME = 3600.
+else:
+  _AWARENESS_TIME = 70.  # one minute limit without user touching steering wheels make the car enter a terminal status
+_AWARENESS_PRE_TIME_TILL_TERMINAL = 15.  # a first alert is issued 15s before expiration
+_AWARENESS_PROMPT_TIME_TILL_TERMINAL = 6.  # a second alert is issued 6s before start decelerating the car
+if not EnableDriverMonitoring and not EnableLogger:
+  _DISTRACTED_TIME = 3600.
+else:
+  _DISTRACTED_TIME = 11.
 _DISTRACTED_PRE_TIME_TILL_TERMINAL = 8.
 _DISTRACTED_PROMPT_TIME_TILL_TERMINAL = 6.
 

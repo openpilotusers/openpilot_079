@@ -84,7 +84,6 @@ typedef enum UIStatus {
   STATUS_OFFROAD,
   STATUS_DISENGAGED,
   STATUS_ENGAGED,
-  STATUS_ENGAGED_OPLONG,
   STATUS_WARNING,
   STATUS_ALERT,
 } UIStatus;
@@ -93,7 +92,6 @@ static std::map<UIStatus, Color> bg_colors = {
   {STATUS_OFFROAD, {0x07, 0x23, 0x39}},
   {STATUS_DISENGAGED, {0x17, 0x33, 0x49}},
   {STATUS_ENGAGED, {0x17, 0x86, 0x44}},
-  {STATUS_ENGAGED_OPLONG, {0x69, 0x69, 0x69}},
   {STATUS_WARNING, {0xDA, 0x6F, 0x25}},
   {STATUS_ALERT, {0xC9, 0x22, 0x31}},
 };
@@ -121,9 +119,15 @@ typedef struct UIScene {
 
   std::string alert_text1;
   std::string alert_text2;
+  std::string alertTextMsg1;
+  std::string alertTextMsg2;
   std::string alert_type;
   cereal::ControlsState::AlertSize alert_size;
   // ui add
+  float awareness_status;
+
+  bool  brakePress;
+  bool recording;
   float gpsAccuracyUblox;
   float altitudeUblox;
   float steeringTorqueEps;
@@ -134,11 +138,13 @@ typedef struct UIScene {
   bool leftBlinker;
   bool rightBlinker;
   int blinker_blinkingrate;
+  int blindspot_blinkingrate = 120;
+  int car_valid_status_changed = 0;
   float angleSteers;
   float steerRatio;
-  bool  brakePress;
   bool brakeLights;
   float angleSteersDes;
+  float curvature;
   bool steerOverride;
   float output_scale; 
   float cpu0Temp;
@@ -147,9 +153,12 @@ typedef struct UIScene {
   char batteryStatus[64];
   // ip addr
   char ipAddr[20];
-  
-  bool recording;
-  
+  int fanSpeed;
+  float tpmsPressureFl;
+  float tpmsPressureFr;
+  float tpmsPressureRl;
+  float tpmsPressureRr;
+  int lateralControlMethod;  
 
   cereal::HealthData::HwType hwType;
   int satelliteCount;
@@ -161,10 +170,48 @@ typedef struct UIScene {
   cereal::DriverState::Reader driver_state;
   cereal::DMonitoringState::Reader dmonitoring_state;
   cereal::ModelData::Reader model;
-  cereal::CarState::GearShifter getGearShifter;  
+  cereal::CarState::GearShifter getGearShifter;
+  cereal::PathPlan::Reader path_plan;
   float left_lane_points[MODEL_PATH_DISTANCE];
   float path_points[MODEL_PATH_DISTANCE];
   float right_lane_points[MODEL_PATH_DISTANCE];
+
+  struct _LiveParams
+  {
+    float gyroBias;
+    float angleOffset;
+    float angleOffsetAverage;
+    float stiffnessFactor;
+    float steerRatio;
+    float yawRate;
+    float posenetSpeed;
+  } liveParams;
+
+  struct _PathPlan
+  {
+    float laneWidth;
+    float steerRatio;
+    float steerActuatorDelay;
+
+    float cProb;
+    float lProb;
+    float rProb;
+
+    float angleOffset;
+
+    float lPoly;
+    float rPoly;
+  } pathPlan;
+
+  struct  _PARAMS
+  {
+    int nOpkrAutoScreenOff;
+    int nOpkrUIBrightness;
+    int nOpkrUIVolumeBoost;
+    int nDebugUi1;
+    int nDebugUi2;
+    int nOpkrBlindSpotDetect;
+  } params;
 } UIScene;
 
 typedef struct {
@@ -202,6 +249,8 @@ typedef struct UIState {
   int img_battery;
   int img_battery_charging;
   int img_network[6];
+  int img_car_left;
+  int img_car_right;
 
   SubMaster *sm;
 
@@ -227,6 +276,7 @@ typedef struct UIState {
 
   // device state
   bool awake;
+  int awake_timeout;
   float light_sensor;
 
   bool started;
