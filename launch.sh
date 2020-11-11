@@ -1,5 +1,18 @@
 #!/usr/bin/bash
 
+if [ ! -f "/data/no_ota_updates" ]; then
+    /usr/bin/touch /data/no_ota_updates
+fi
+
+ALIAS_CHECK=$(/usr/bin/grep gitpull /system/comma/home/.bash_profile)
+
+if [ "$ALIAS_CHECK" == "" ]; then
+    sleep 3
+    mount -o remount,rw /system
+    echo "alias gi='/data/openpilot/gitpull.sh'" >> /system/comma/home/.bash_profile
+    mount -o remount,r /system
+fi
+
 if [ ! -f "/system/fonts/opensans_regular.ttf" ]; then
     sleep 3
     mount -o remount,rw /system
