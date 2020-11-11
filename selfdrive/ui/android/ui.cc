@@ -41,37 +41,31 @@ static void enable_event_processing(bool yes) {
   }
 }
 
-// TODO: implement double tap to wake and actually turn display off
-static void handle_display_state(UIState *s, bool user_input) {
-
-  static int display_mode = HWC_POWER_MODE_OFF;
-  static int display_timeout = 0;
-
-  // determine desired state
-  int desired_mode = display_mode;
-  if (user_input || s->ignition || s->started) {
-    desired_mode = HWC_POWER_MODE_NORMAL;
-    display_timeout = 30*UI_FREQ;
-  } else {
-    display_timeout = std::max(display_timeout-1, 0);
-    if (display_timeout == 0) {
-      desired_mode = HWC_POWER_MODE_OFF;
-    }
+static void set_awake(UIState *s, bool awake) {
+  if (awake) {
+    // 30 second timeout
+    s->awake_timeout = (s->scene.params.nOpkrAutoScreenOff && s->started)? s->scene.params.nOpkrAutoScreenOff*60*UI_FREQ : 30*UI_FREQ;
   }
+  if (s->awake != awake) {
+    s->awake = awake;
 
-  // handle state transition
-  if (display_mode != desired_mode) {
-    LOGW("setting display mode %d", desired_mode);
-
-    display_mode = desired_mode;
-    s->awake = display_mode == HWC_POWER_MODE_NORMAL;
-    framebuffer_set_power(s->fb, display_mode);
-    enable_event_processing(s->awake);
-
-    if (!s->awake) {
+    // TODO: replace command_awake and command_sleep with direct calls to android
+    if (awake) {
+      LOGW("awake normal");
+      framebuffer_set_power(s->fb, HWC_POWER_MODE_NORMAL);
+      enable_event_processing(true);
+    } else {
+      LOGW("awake off");
       ui_set_brightness(s, 0);
+      framebuffer_set_power(s->fb, HWC_POWER_MODE_OFF);
+      enable_event_processing(false);
     }
   }
+}
+
+static void handle_openpilot_view_touch() 
+{
+  write_db_value("IsDriverViewEnabled", "0", 1);
 }
 
 static void handle_vision_touch(UIState *s, int touch_x, int touch_y) {
@@ -80,7 +74,7 @@ static void handle_vision_touch(UIState *s, int touch_x, int touch_y) {
     if (!s->scene.frontview) {
       s->scene.uilayout_sidebarcollapsed = !s->scene.uilayout_sidebarcollapsed;
     } else {
-      write_db_value("IsDriverViewEnabled", "0", 1);
+      handle_openpilot_view_touch();
     }
   }
 }
@@ -130,7 +124,7 @@ int main(int argc, char* argv[]) {
   ui_init(s);
   s->sound = &sound;
 
-  handle_display_state(s, true);
+  set_awake(s, true);
   enable_event_processing(true);
 
   PubMaster *pm = new PubMaster({"offroadLayout"});
@@ -156,6 +150,11 @@ int main(int argc, char* argv[]) {
   const int MAX_VOLUME = LEON ? 15 : 12;
   s->sound->setVolume(MIN_VOLUME);
 
+  if (s->scene.params.nOpkrAutoScreenOff && !s->awake) {
+    set_awake(s, true);
+  }
+
+  int nParamRead = 0;
   while (!do_exit) {
     if (!s->started || !s->vision_connected) {
       // Delay a while to avoid 9% cpu usage while car is not started and user is keeping touching on the screen.
@@ -163,7 +162,38 @@ int main(int argc, char* argv[]) {
     }
     double u1 = millis_since_boot();
 
+    // parameter Read.
+    nParamRead++;
+    switch( nParamRead )
+    {
+      case 1: ui_get_params( "OpkrAutoScreenOff", &s->scene.params.nOpkrAutoScreenOff ); break;
+      case 2: ui_get_params( "OpkrUIBrightness", &s->scene.params.nOpkrUIBrightness ); break;
+      case 3: ui_get_params( "OpkrUIVolumeBoost", &s->scene.params.nOpkrUIVolumeBoost ); break;
+      case 4: ui_get_params( "DebugUi1", &s->scene.params.nDebugUi1 ); break;
+      case 5: ui_get_params( "DebugUi2", &s->scene.params.nDebugUi2 ); break;
+      case 6: ui_get_params( "OpkrBlindSpotDetect", &s->scene.params.nOpkrBlindSpotDetect ); break;
+      default: nParamRead = 0; break;
+    }
+
     ui_update(s);
+
+    // manage wakefulness
+    if (s->started || s->ignition) {
+      if (s->scene.params.nOpkrAutoScreenOff) {
+        // turn on screen when alert is here.
+        if (s->awake_timeout == 0 && (s->status == STATUS_DISENGAGED || s->status == STATUS_ALERT || s->status == STATUS_WARNING || (s->scene.alert_text1 != ""))) {
+          set_awake(s, true);
+        }
+      } else {
+        set_awake(s, true);
+      }
+    }
+
+    if (s->awake_timeout > 0) {
+      s->awake_timeout--;
+    } else {
+      set_awake(s, false);
+    }
 
     // poll for touch events
     int touch_x = -1, touch_y = -1;
@@ -174,23 +204,37 @@ int main(int argc, char* argv[]) {
     }
 
     if (touched == 1) {
-      handle_sidebar_touch(s, touch_x, touch_y);
-      handle_vision_touch(s, touch_x, touch_y);
+      if (s->scene.params.nOpkrAutoScreenOff && s->awake_timeout == 0) {
+        set_awake(s, true);
+      } else {
+        set_awake(s, true);
+        handle_sidebar_touch(s, touch_x, touch_y);
+        handle_vision_touch(s, touch_x, touch_y);
+      }
     }
 
     // Don't waste resources on drawing in case screen is off
-    handle_display_state(s, touched == 1);
     if (!s->awake) {
       continue;
     }
 
     // up one notch every 5 m/s
-    s->sound->setVolume(fmin(MAX_VOLUME, MIN_VOLUME + s->scene.controls_state.getVEgo() / 5));
+    float min = MIN_VOLUME + s->scene.controls_state.getVEgo() / 5;
+    if (s->scene.params.nOpkrUIVolumeBoost > 0 || s->scene.params.nOpkrUIVolumeBoost < 0) {
+      min = min * (1 + s->scene.params.nOpkrUIVolumeBoost * 0.01);
+    }
+    s->sound->setVolume(fmin(MAX_VOLUME, min)); // up one notch every 5 m/s
 
     // set brightness
-    float clipped_brightness = fmin(512, (s->light_sensor*brightness_m) + brightness_b);
-    smooth_brightness = fmin(255, clipped_brightness * 0.01 + smooth_brightness * 0.99);
+    if (s->scene.params.nOpkrUIBrightness == 0) {
+    float clipped_brightness = (s->light_sensor*brightness_m) + brightness_b;
+    if (clipped_brightness > 512) clipped_brightness = 512;
+    smooth_brightness = clipped_brightness * 0.01 + smooth_brightness * 0.99;
+    if (smooth_brightness > 255) smooth_brightness = 255;
     ui_set_brightness(s, (int)smooth_brightness);
+    } else {
+      ui_set_brightness(s, (int)(255*s->scene.params.nOpkrUIBrightness*0.01));
+    }
 
     update_offroad_layout_state(s, pm);
 
@@ -203,7 +247,7 @@ int main(int argc, char* argv[]) {
     framebuffer_swap(s->fb);
   }
 
-  handle_display_state(s, true);
+  set_awake(s, true);
   delete s->sm;
   delete pm;
   return 0;

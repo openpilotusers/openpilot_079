@@ -275,7 +275,7 @@ static void screen_draw_button(UIState *s, int touch_x, int touch_y) {
       nvgStrokeWidth(s->vg, 6);
       nvgStroke(s->vg);
 
-      nvgFontSize(s->vg, 70);
+      nvgFontSize(s->vg, 60);
 
       if (captureState == CAPTURE_STATE_CAPTURING) {
         NVGcolor fillColor = nvgRGBA(255,0,0,150);
@@ -342,13 +342,13 @@ bool dashcam( UIState *s, int touch_x, int touch_y ) {
   }
   if (!s->vision_connected) {
     // Assume car is not in drive so stop recording
-    stop_capture();
+    //stop_capture();
   }
 //  if (s->scene.v_ego > 2.1 && captureState == CAPTURE_STATE_NOT_CAPTURING && !s->scene.engaged) {
 //    start_capture();
 //  } else if (s->scene.v_ego < 1.5 && !s->scene.engaged) {
   if (s->scene.controls_state.getVEgo() < 1.5 && !s->scene.controls_state.getEnabled()) {
-    stop_capture();
+    //stop_capture();
   }
   s->scene.recording = (captureState != CAPTURE_STATE_NOT_CAPTURING);
   
