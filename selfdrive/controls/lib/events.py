@@ -228,7 +228,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "오픈파일럿 사용준비가 되었습니다",
       "안전운전을 위해 항상 핸들을 잡고 도로교통 상황을 주시하세요",
       AlertStatus.normal, AlertSize.mid,
-      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 5., 0., 5.),
+      Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., 5.),
   },
 
   EventName.startupMaster: {
@@ -331,10 +331,10 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
 
   EventName.visiononlyWarning: {
     ET.PERMANENT: Alert(
-      "순정 AEB/SCC 비활성화됨, 오픈파일럿 비전 작동중",
+      "오픈파일럿 비전 작동중",
       "사용에 주의하세요",
       AlertStatus.userPrompt, AlertSize.small,
-      Priority.LOW, VisualAlert.none, AudibleAlert.chimeDingRepeat, 1., 2., 15.),
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeDingRepeat, 1., 2., 3.),
   },
 
   # ********** events only containing alerts that display while engaged **********
@@ -352,7 +352,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "차량 매개 변수 식별 실패",
       "",
       AlertStatus.normal, AlertSize.small,
-      Priority.LOWEST, VisualAlert.steerRequired, AudibleAlert.none, .0, .0, .1),
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, .0, .0, .1),
   },
 
   EventName.steerTempUnavailableMute: {
@@ -368,7 +368,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "도로상황에 주의를 기울이세요",
       "",
       AlertStatus.normal, AlertSize.small,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, .0, .1, .1, alert_rate=0.75),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, .0, .1, .1, alert_rate=0.75),
   },
 
   EventName.promptDriverDistracted: {
@@ -392,7 +392,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "핸들을 터치하세요: 모니터링 없음",
       "",
       AlertStatus.normal, AlertSize.small,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, .0, .1, .1, alert_rate=0.75),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, .0, .1, .1, alert_rate=0.75),
   },
 
   EventName.promptDriverUnresponsive: {
@@ -400,7 +400,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "핸들을 터치하세요",
       "운전자 모니터링 없음",
       AlertStatus.userPrompt, AlertSize.mid,
-      Priority.MID, VisualAlert.steerRequired, AudibleAlert.chimeWarning2Repeat, .1, .1, .1),
+      Priority.MID, VisualAlert.none, AudibleAlert.none, .1, .1, .1),
   },
 
   EventName.driverUnresponsive: {
@@ -408,15 +408,15 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "경고: 조향제어가 즉시 해제됩니다",
       "운전자 모니터링 없음",
       AlertStatus.critical, AlertSize.full,
-      Priority.HIGH, VisualAlert.steerRequired, AudibleAlert.chimeWarningRepeat, .1, .1, .1),
+      Priority.HIGH, VisualAlert.none, AudibleAlert.none, .1, .1, .1),
   },
 
   EventName.driverMonitorLowAcc: {
     ET.WARNING: Alert(
       "운전자 얼굴 확인 중",
-      "운전자 얼굴 인식이 매끄럽지 않습니다",
+      "운전자 얼굴 인식이 원할하지 않습니다",
       AlertStatus.normal, AlertSize.mid,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, .4, 0., 1.5),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, .4, 0., 1.5),
   },
 
   EventName.manualRestart: {
@@ -494,7 +494,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   EventName.driverSteering: {
     ET.WARNING: Alert(
       "운전자 직접 조향중",
-      "자동조향이 일시 비활성화 됩니다",
+      "자동조향이 일시적으로 저하됩니다",
       AlertStatus.userPrompt, AlertSize.mid,
       Priority.LOW, VisualAlert.none, AudibleAlert.none, .0, .1, .1),
   },
@@ -504,7 +504,37 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "핸들을 잡아주세요",
       "차로유지 범위를 이탈하고 있습니다",
       AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, 1., 2., 1.),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, 1., 1., 1.),
+  },
+
+  EventName.modeChangeOpenpilot: {
+    ET.WARNING: Alert(
+      "오픈파일럿 모드",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeModeOpenpilot, 1., 0, 1.),
+  },
+  
+  EventName.modeChangeDistcurv: {
+    ET.WARNING: Alert(
+      "차간+커브 제어 모드",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeModeDistcurv, 1., 0, 1.),
+  },
+  EventName.modeChangeDistance: {
+    ET.WARNING: Alert(
+      "차간ONLY 제어 모드",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeModeDistance, 1., 0, 1.),
+  },
+  EventName.modeChangeOneway: {
+    ET.WARNING: Alert(
+      "편도1차선 모드",
+      "",
+      AlertStatus.normal, AlertSize.small,
+      Priority.LOW, VisualAlert.none, AudibleAlert.chimeModeOneway, 1., 0, 1.),
   },
 
   # ********** events that affect controls state transitions **********
@@ -526,16 +556,17 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   },
 
   EventName.brakeHold: {
+    ET.USER_DISABLE: EngagementAlert(AudibleAlert.none),
     ET.NO_ENTRY: NoEntryAlert("브레이크 홀드 중"),
   },
 
   EventName.parkBrake: {
-    ET.USER_DISABLE: EngagementAlert(AudibleAlert.chimeDisengage),
+    ET.USER_DISABLE: EngagementAlert(AudibleAlert.none),
     ET.NO_ENTRY: NoEntryAlert("파킹브레이크 체결 됨"),
   },
 
   EventName.pedalPressed: {
-    ET.USER_DISABLE: EngagementAlert(AudibleAlert.chimeDisengage),
+    ET.USER_DISABLE: EngagementAlert(AudibleAlert.none),
     ET.NO_ENTRY: NoEntryAlert("시작 중 페달 밟음",
                               visual_alert=VisualAlert.brakePressed),
   },
@@ -546,7 +577,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   },
 
   EventName.wrongCruiseMode: {
-    ET.USER_DISABLE: EngagementAlert(AudibleAlert.chimeDisengage),
+    ET.USER_DISABLE: EngagementAlert(AudibleAlert.none),
     ET.NO_ENTRY: NoEntryAlert("어댑티브 크루즈컨트롤을 활성화하세요"),
   },
 
@@ -565,7 +596,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "핸들을 잡아주세요",
       "카메라 포커스 조정중: 카메라 포커스 부정확",
       AlertStatus.userPrompt, AlertSize.mid,
-      Priority.LOW, VisualAlert.steerRequired, AudibleAlert.none, .4, 2., 3., creation_delay=3.1),
+      Priority.LOW, VisualAlert.none, AudibleAlert.none, .4, 2., 3., creation_delay=3.1),
   },
 
   EventName.outOfSpace: {
@@ -639,7 +670,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   },
 
   EventName.doorOpen: {
-    ET.USER_DISABLE: EngagementAlert(AudibleAlert.chimeDisengage),
+    ET.SOFT_DISABLE: SoftDisableAlert("도어가 열려있습니다"),
     ET.NO_ENTRY: NoEntryAlert("도어가 열려있습니다"),
   },
 
@@ -661,13 +692,13 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   EventName.commIssue: {
     ET.SOFT_DISABLE: SoftDisableAlert("프로세스 간 통신 오류가 있습니다"),
     ET.NO_ENTRY: NoEntryAlert("프로세스 간 통신 오류가 있습니다",
-                              audible_alert=AudibleAlert.chimeDisengage),
+                              audible_alert=AudibleAlert.none),
   },
 
   EventName.radarCommIssue: {
     ET.SOFT_DISABLE: SoftDisableAlert("레이더 통신 오류가 있습니다"),
     ET.NO_ENTRY: NoEntryAlert("레이더 통신 오류가 있습니다",
-                              audible_alert=AudibleAlert.chimeDisengage),
+                              audible_alert=AudibleAlert.none),
   },
 
   EventName.radarCanError: {
@@ -703,7 +734,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       AlertStatus.normal, AlertSize.mid,
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., .2),
     ET.NO_ENTRY : NoEntryAlert("메모리 부족: 장치를 재시작하세요",
-                               audible_alert=AudibleAlert.chimeDisengage),
+                               audible_alert=AudibleAlert.none),
   },
 
   EventName.controlsFailed: {
@@ -726,13 +757,13 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   },
 
   EventName.steerUnavailable: {
-    ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("조향처리오류: 시동을 끄고 잠시후에 다시 시작하세요"),
+    ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("LKAS오류: 시동을 끄고 잠시후에 다시 시작하세요"),
     ET.PERMANENT: Alert(
-      "조향처리오류: 시동을 끄고 잠시후에 다시 시작하세요",
+      "LKAS오류: 시동을 끄고 잠시후에 다시 시작하세요",
       "",
       AlertStatus.normal, AlertSize.small,
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., .2),
-    ET.NO_ENTRY: NoEntryAlert("시동을 끄고 잠시후에 다시 시작하세요"),
+    ET.NO_ENTRY: NoEntryAlert("LKAS 오류: 차량을 재시작하세요"),
   },
 
   EventName.brakeUnavailable: {
@@ -751,9 +782,13 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
   },
 
   EventName.reverseGear: {
-    ET.USER_DISABLE: EngagementAlert(AudibleAlert.chimeDisengage),
-    ET.NO_ENTRY: NoEntryAlert("후진 기어"),
-  },
+    ET.PERMANENT: Alert(
+      "후진 기어",
+      "",
+      AlertStatus.normal, AlertSize.full,
+      Priority.LOWEST, VisualAlert.none, AudibleAlert.none, 0., 0., .2, creation_delay=0.5),
+    ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("후진 기어"),
+    ET.NO_ENTRY: NoEntryAlert("후진 기어"),  },
 
   EventName.cruiseDisabled: {
     ET.IMMEDIATE_DISABLE: ImmediateDisableAlert("크루즈 꺼짐"),
@@ -779,16 +814,16 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "오픈파일럿 시작불가",
       "선행차량이 없습니다",
       AlertStatus.normal, AlertSize.mid,
-      Priority.HIGH, VisualAlert.none, AudibleAlert.chimeDisengage, .4, 2., 3.),
+      Priority.HIGH, VisualAlert.none, AudibleAlert.none, .4, 2., 3.),
     ET.NO_ENTRY : NoEntryAlert("선행차량이 없습니다"),
   },
 
   EventName.speedTooLow: {
     ET.IMMEDIATE_DISABLE: Alert(
       "오픈파일럿 시작불가",
-      "속도가 낮습니다",
+      "차량의 속도가 낮습니다",
       AlertStatus.normal, AlertSize.mid,
-      Priority.HIGH, VisualAlert.none, AudibleAlert.chimeDisengage, .4, 2., 3.),
+      Priority.HIGH, VisualAlert.none, AudibleAlert.none, .4, 2., 3.),
   },
 
   EventName.speedTooHigh: {
@@ -796,7 +831,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       "속도가 너무 높습니다",
       "재 작동을 위해 차량의 속도를 낮추세요",
       AlertStatus.normal, AlertSize.mid,
-      Priority.HIGH, VisualAlert.steerRequired, AudibleAlert.chimeWarning2Repeat, 2.2, 3., 4.),
+      Priority.HIGH, VisualAlert.none, AudibleAlert.chimeWarning2Repeat, 2.2, 3., 4.),
     ET.NO_ENTRY: Alert(
       "속도가 너무 높습니다",
       "시작을 위해 차량의 속도를 낮추세요",
@@ -811,7 +846,7 @@ EVENTS: Dict[int, Dict[str, Union[Alert, Callable[[Any, messaging.SubMaster, boo
       AlertStatus.normal, AlertSize.mid,
       Priority.LOWER, VisualAlert.none, AudibleAlert.none, 0., 0., .2),
     ET.NO_ENTRY: NoEntryAlert("인터넷에 연결하세요",
-                              audible_alert=AudibleAlert.chimeDisengage),
+                              audible_alert=AudibleAlert.none),
   },
 
   EventName.lowSpeedLockout: {
