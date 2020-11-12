@@ -1,4 +1,4 @@
-﻿from numpy import clip
+from numpy import clip
 
 from cereal import car, log, messaging
 from common.params import Params
