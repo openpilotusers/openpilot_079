@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from cereal import log
+from cereal import car, log
 import cereal.messaging as messaging
 
 import cereal.messaging as messaging
@@ -186,7 +186,7 @@ class SpdController():
             self.prev_VSetDis = int(CS.VSetDis)
             set_speed_kph = int(CS.VSetDis)
             if self.prev_clu_CruiseSwState != CS.cruise_buttons:  # MODE 전환.
-                if CS.cruise_buttons == Buttons.GAP_DIST and not CS.acc_active and CS.out.cruiseState.available:
+                if CS.cruise_buttons == Buttons.GAP_DIST and CS.out.cruiseState.enabled:
                     self.cruise_set_mode += 1
                 if self.cruise_set_mode > 3:
                     self.cruise_set_mode = 0

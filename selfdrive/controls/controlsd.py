@@ -27,7 +27,7 @@ import common.log as trace1
 LDW_MIN_SPEED = 50 * CV.KPH_TO_MS
 LANE_DEPARTURE_THRESHOLD = 0.1
 STEER_ANGLE_SATURATION_TIMEOUT = 1.0 / DT_CTRL
-STEER_ANGLE_SATURATION_THRESHOLD = 2.5  # Degrees
+STEER_ANGLE_SATURATION_THRESHOLD = 45  # Degrees
 
 SIMULATION = "SIMULATION" in os.environ
 NOSENSOR = "NOSENSOR" in os.environ
@@ -410,6 +410,9 @@ class Controls:
 
   def publish_logs(self, CS, start_time, actuators, v_acc, a_acc, lac_log):
     """Send actuators and hud commands to the car, send controlsstate and MPC logging"""
+
+    self.log_alertTextMsg1 = trace1.global_alertTextMsg1
+    self.log_alertTextMsg2 = trace1.global_alertTextMsg2
 
     CC = car.CarControl.new_message()
     CC.enabled = self.enabled

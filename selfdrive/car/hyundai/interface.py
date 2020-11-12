@@ -314,6 +314,10 @@ class CarInterface(CarInterfaceBase):
     if self.CC.mode_change_timer and self.CS.out.cruiseState.modeSel == 0:
       events.add(EventName.modeChangeOpenpilot)
     elif self.CC.mode_change_timer and self.CS.out.cruiseState.modeSel == 1:
+      events.add(EventName.modeChangeDistcurv)
+    elif self.CC.mode_change_timer and self.CS.out.cruiseState.modeSel == 2:
+      events.add(EventName.modeChangeDistance)
+    elif self.CC.mode_change_timer and self.CS.out.cruiseState.modeSel == 3:
       events.add(EventName.modeChangeOneway)
     ret.events = events.to_msg()
 
@@ -325,6 +329,6 @@ class CarInterface(CarInterfaceBase):
                                c.cruiseControl.cancel, c.hudControl.visualAlert, c.hudControl.leftLaneVisible,
                                c.hudControl.rightLaneVisible, c.hudControl.leftLaneDepart, c.hudControl.rightLaneDepart,
                                c.hudControl.setSpeed, c.hudControl.leadVisible, c.hudControl.leadDistance,
-                               c.hudControl.leadvRel, c.hudControl.leadyRel)
+                               c.hudControl.leadvRel, c.hudControl.leadyRel, sm)
     self.frame += 1
     return can_sends
