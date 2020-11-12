@@ -1,4 +1,5 @@
 import crcmod
+from common.params import Params
 from selfdrive.car.hyundai.values import CAR, CHECKSUM
 
 hyundai_checksum = crcmod.mkCrcFun(0x11D, initCrc=0xFD, rev=False, xorOut=0xdf)
@@ -47,6 +48,9 @@ def create_lkas11(packer, frame, car_fingerprint, apply_steer, steer_req,
   elif car_fingerprint == CAR.KIA_OPTIMA:
     values["CF_Lkas_LdwsActivemode"] = 0
 
+  ldws_car_fix = int(Params().get('LdwsCarFix')) == "1"
+  if ldws_car_fix:
+  	values["CF_Lkas_LdwsOpt_USM"] = 3
   dat = packer.make_can_msg("LKAS11", 0, values)[2]
 
   if car_fingerprint in CHECKSUM["crc8"]:

@@ -5,6 +5,8 @@ from selfdrive.car.hyundai.values import DBC, STEER_THRESHOLD, FEATURES, ELEC_VE
 from selfdrive.car.interfaces import CarStateBase
 from opendbc.can.parser import CANParser
 from selfdrive.config import Conversions as CV
+from selfdrive.car.hyundai.spdcontroller  import SpdController
+from selfdrive.car.hyundai.values import Buttons
 
 GearShifter = car.CarState.GearShifter
 
@@ -14,6 +16,7 @@ class CarState(CarStateBase):
     super().__init__(CP)
 
     #Auto detection for setup
+    self.lkas_button_on = True
     self.cruise_main_button = 0
     self.cruise_buttons = 0
     self.allow_nonscc_available = False
@@ -27,7 +30,20 @@ class CarState(CarStateBase):
     self.leftblinkerflashdebounce = 0
     self.rightblinkerflashdebounce = 0
     self.steeringPressedTimer = 0
+    self.cruiseState_modeSel = 0
+    self.SC = SpdController()
+    self.acc_active = False
+    self.mdps_error_cnt = 0
 
+    self.driverAcc_time = 0
+
+    # blinker
+    self.left_blinker_flash = 0
+    self.right_blinker_flash = 0  
+    self.TSigLHSw = 0
+    self.TSigRHSw = 0
+
+    self.steer_anglecorrection = int(Params().get('OpkrSteerAngleCorrection')) * 0.1
   def update(self, cp, cp2, cp_cam):
     cp_mdps = cp2 if self.CP.mdpsHarness else cp
     cp_sas = cp2 if self.CP.sasBus else cp
@@ -36,6 +52,7 @@ class CarState(CarStateBase):
 
     self.prev_cruise_buttons = self.cruise_buttons
     self.prev_cruise_main_button = self.cruise_main_button
+    self.prev_lkas_button_on = self.lkas_button_on
 
     ret = car.CarState.new_message()
 
@@ -53,39 +70,27 @@ class CarState(CarStateBase):
 
     ret.standstill = ret.vEgoRaw < 0.1
 
-    ret.steeringAngle = cp_sas.vl["SAS11"]['SAS_Angle']
+    ret.steeringAngle = cp_sas.vl["SAS11"]['SAS_Angle'] - self.steer_anglecorrection
     ret.steeringRate = cp_sas.vl["SAS11"]['SAS_Speed']
     ret.yawRate = cp.vl["ESP12"]['YAW_RATE']
-
-    self.leftblinkerflash = cp.vl["CGW1"]['CF_Gway_TurnSigLh'] != 0 and cp.vl["CGW1"]['CF_Gway_TSigLHSw'] == 0
-    self.rightblinkerflash = cp.vl["CGW1"]['CF_Gway_TurnSigRh'] != 0 and cp.vl["CGW1"]['CF_Gway_TSigRHSw'] == 0
-
-    if self.leftblinkerflash:
-      self.leftblinkerflashdebounce = 150
-    elif self.leftblinkerflashdebounce > 0:
-      self.leftblinkerflashdebounce -= 1
-
-    if self.rightblinkerflash:
-      self.rightblinkerflashdebounce = 150
-    elif self.rightblinkerflashdebounce > 0:
-      self.rightblinkerflashdebounce -= 1
-
-    ret.leftBlinker = cp.vl["CGW1"]['CF_Gway_TSigLHSw'] != 0 or self.leftblinkerflashdebounce > 0
-    ret.rightBlinker = cp.vl["CGW1"]['CF_Gway_TSigRHSw'] != 0 or self.rightblinkerflashdebounce > 0
-
     ret.steeringTorque = cp_mdps.vl["MDPS12"]['CR_Mdps_StrColTq']
     ret.steeringTorqueEps = cp_mdps.vl["MDPS12"]['CR_Mdps_OutTq']
+    ret.steeringPressed = abs(ret.steeringTorque) > STEER_THRESHOLD
+    self.mdps_error_cnt += 1 if cp_mdps.vl["MDPS12"]['CF_Mdps_ToiUnavail'] != 0 else -self.mdps_error_cnt
+    ret.steerWarning = self.mdps_error_cnt > 100 #cp_mdps.vl["MDPS12"]['CF_Mdps_ToiUnavail'] != 0
 
-    if abs(ret.steeringTorque) > 20:
-      self.steeringPressedTimer +=1
-      if abs(ret.steeringTorque) > STEER_THRESHOLD:
-        self.steeringPressedTimer = 50
-    else:
-      self.steeringPressedTimer = 0
+    ret.leftBlinker, ret.rightBlinker = self.update_blinker(cp)
 
-    ret.steeringPressed = self.steeringPressedTimer >= 50
-
-    ret.steerWarning = cp_mdps.vl["MDPS12"]['CF_Mdps_ToiUnavail'] != 0
+    self.VSetDis = cp_scc.vl["SCC11"]['VSetDis']
+    self.clu_Vanz = cp.vl["CLU11"]["CF_Clu_Vanz"]
+    lead_objspd = cp_scc.vl["SCC11"]['ACC_ObjRelSpd']
+    self.lead_objspd = lead_objspd * CV.MS_TO_KPH
+    self.Mdps_ToiUnavail = cp_mdps.vl["MDPS12"]['CF_Mdps_ToiUnavail']
+    self.driverOverride = cp.vl["TCS13"]["DriverOverride"]
+    if self.driverOverride == 1:
+      self.driverAcc_time = 100
+    elif self.driverAcc_time:
+      self.driverAcc_time -= 1
 
     self.brakeHold = (cp.vl["ESP11"]['AVH_STAT'] == 1)
 
@@ -114,6 +119,11 @@ class CarState(CarStateBase):
     elif not self.CP.radarOffCan:
       ret.cruiseState.available = (cp_scc.vl["SCC11"]["MainMode_ACC"] != 0)
       ret.cruiseState.enabled = (cp_scc.vl["SCC12"]['ACCMode'] != 0)
+      
+    self.acc_active = ret.cruiseState.enabled
+    
+    self.cruiseState_modeSel, speed_kph = self.SC.update_cruiseSW(self)
+    ret.cruiseState.modeSel = self.cruiseState_modeSel
 
     self.lead_distance = cp_scc.vl["SCC11"]['ACC_ObjDist']
     self.vrelative = cp_scc.vl["SCC11"]['ACC_ObjRelSpd']
@@ -129,6 +139,8 @@ class CarState(CarStateBase):
         ret.cruiseState.speed = cp_scc.vl["SCC11"]['VSetDis'] * speed_conv
     else:
       ret.cruiseState.speed = 0
+    self.cruise_main_button = cp.vl["CLU11"]["CF_Clu_CruiseSwMain"]
+    self.cruise_buttons = cp.vl["CLU11"]["CF_Clu_CruiseSwState"]
 
     # TODO: Find brake pressure
     ret.brake = 0
@@ -150,6 +162,26 @@ class CarState(CarStateBase):
       ret.gasPressed = ret.gasPressed or bool(cp.vl["EMS16"]["CF_Ems_AclAct"])
 
     ret.espDisabled = (cp.vl["TCS15"]['ESC_Off_Step'] != 0)
+
+    #TPMS
+    if cp.vl["TPMS11"]['PRESSURE_FL'] > 43:
+      ret.tpmsPressureFl = cp.vl["TPMS11"]['PRESSURE_FL'] * 5 * 0.145
+    else:
+      ret.tpmsPressureFl = cp.vl["TPMS11"]['PRESSURE_FL']
+    if cp.vl["TPMS11"]['PRESSURE_FR'] > 43:
+      ret.tpmsPressureFr = cp.vl["TPMS11"]['PRESSURE_FR'] * 5 * 0.145
+    else:
+      ret.tpmsPressureFr = cp.vl["TPMS11"]['PRESSURE_FR']
+    if cp.vl["TPMS11"]['PRESSURE_RL'] > 43:
+      ret.tpmsPressureRl = cp.vl["TPMS11"]['PRESSURE_RL'] * 5 * 0.145
+    else:
+      ret.tpmsPressureRl = cp.vl["TPMS11"]['PRESSURE_RL']
+    if cp.vl["TPMS11"]['PRESSURE_RR'] > 43:
+      ret.tpmsPressureRr = cp.vl["TPMS11"]['PRESSURE_RR'] * 5 * 0.145
+    else:
+      ret.tpmsPressureRr = cp.vl["TPMS11"]['PRESSURE_RR']
+
+    self.cruiseGapSet = cp_scc.vl["SCC11"]['TauGapSet']
 
     self.parkBrake = (cp.vl["CGW1"]['CF_Gway_ParkBrakeSw'] != 0)
 
@@ -229,7 +261,36 @@ class CarState(CarStateBase):
     self.scc12init = copy.copy(cp.vl["SCC12"])
     self.fca11init = copy.copy(cp.vl["FCA11"])
 
+    self.lkas_error = cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"] == 7
+    if not self.lkas_error:
+      self.lkas_button_on = cp_cam.vl["LKAS11"]["CF_Lkas_LdwsSysState"]
+
     return ret
+
+  def update_blinker(self, cp):
+    self.TSigLHSw = cp.vl["CGW1"]['CF_Gway_TSigLHSw']
+    self.TSigRHSw = cp.vl["CGW1"]['CF_Gway_TSigRHSw']
+    leftBlinker = cp.vl["CGW1"]['CF_Gway_TurnSigLh'] != 0
+    rightBlinker = cp.vl["CGW1"]['CF_Gway_TurnSigRh'] != 0
+
+    if leftBlinker and not rightBlinker:
+      self.left_blinker_flash = 140
+      self.right_blinker_flash = 0
+    elif rightBlinker and not leftBlinker:
+      self.right_blinker_flash = 140
+      self.left_blinker_flash = 0
+    elif leftBlinker and rightBlinker:
+      self.left_blinker_flash = 140
+      self.right_blinker_flash = 140
+
+    if  self.left_blinker_flash:
+      self.left_blinker_flash -= 1
+    if  self.right_blinker_flash:
+      self.right_blinker_flash -= 1
+
+    leftBlinker = self.left_blinker_flash != 0
+    rightBlinker = self.right_blinker_flash != 0
+    return  leftBlinker, rightBlinker
 
   @staticmethod
   def get_can_parser(CP):
@@ -282,6 +343,11 @@ class CarState(CarStateBase):
 
       ("CF_Lvr_CruiseSet", "LVR12", 0),
       ("CRUISE_LAMP_M", "EMS16", 0),
+
+      ("PRESSURE_FL", "TPMS11", 0),
+      ("PRESSURE_FR", "TPMS11", 0),
+      ("PRESSURE_RL", "TPMS11", 0),
+      ("PRESSURE_RR", "TPMS11", 0),
     ]
 
     checks = [
