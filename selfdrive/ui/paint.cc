@@ -142,7 +142,6 @@ static void ui_draw_circle_image(NVGcontext *vg, float x, float y, int size, int
 }
 
 static void draw_lead(UIState *s, const cereal::RadarState::LeadData::Reader &lead){
-  const UIScene *scene = &s->scene;
   // Draw lead car indicator
   float fillAlpha = 0;
   float speedBuff = 10.;
