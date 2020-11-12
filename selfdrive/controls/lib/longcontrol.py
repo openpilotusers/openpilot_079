@@ -50,8 +50,9 @@ class LongControl():
   def __init__(self, CP, compute_gb):
     self.long_control_state = LongCtrlState.off  # initialized to off
 
-    kdBP = [0., 16., 35.]
-    kdV = [0.08, 0.215, 0.51]
+    kdBP = [0., 33, 55., 78]
+    kdBP = [i * CV.MPH_TO_MS for i in kdBP]
+    kdV = [0.05, 0.4, 0.8, 1.2]
 
     self.pid = PIDController((CP.longitudinalTuning.kpBP, CP.longitudinalTuning.kpV),
                              (CP.longitudinalTuning.kiBP, CP.longitudinalTuning.kiV),
@@ -84,7 +85,7 @@ class LongControl():
     else:
       dRel = radarState.leadOne.dRel
       vLead = radarState.leadOne.vLead
-    if hasLead and dRel < 5. and radarState.leadOne.status:
+    if hasLead and dRel < 3.5 and radarState.leadOne.status:
       self.stop = True
       if self.stop:
         self.stop_timer = 100
@@ -123,7 +124,7 @@ class LongControl():
       # Keep applying brakes until the car is stopped
       factor = 1.
       if hasLead:
-        factor = interp(dRel, [2., 3., 4., 5., 6., 7., 8.], [5., 2.5, 1., .5, .25, .05, .005])
+        factor = interp(dRel, [2., 3., 4., 5., 6., 7., 8., 9., 10.], [5., 2.5, 1., .5, .25, .05, .005, .003, .002])
       if output_gb > -BRAKE_STOPPING_TARGET:
         output_gb -= (STOPPING_BRAKE_RATE * factor) / RATE
       if output_gb < -.5 and CS.standstill:
