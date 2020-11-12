@@ -1,4 +1,4 @@
-from numpy import clip
+ï»¿from numpy import clip
 
 from cereal import car, log, messaging
 from common.params import Params
@@ -297,7 +297,7 @@ class CarController():
 
       can_sends.append(create_clu11(self.packer, 1, CS.clu11, Buttons.NONE, enabled_speed, self.clu11_cnt))
 
-    str_log1 = '°î·ü={:03.0f}  ÅäÅ©={:03.0f}  ÇÁ·¹ÀÓ·ü={:03.0f} ST={:03.0f}/{:01.0f}/{:01.0f}'.format(abs(self.model_speed), abs(new_steer), self.timer1.sampleTime(), self.steerMax, self.steerDeltaUp, self.steerDeltaDown)
+    str_log1 = 'ê³¡ë¥ ={:03.0f}  í† í¬={:03.0f}  í”„ë ˆì„ë¥ ={:03.0f} ST={:03.0f}/{:01.0f}/{:01.0f}'.format(abs(self.model_speed), abs(new_steer), self.timer1.sampleTime(), self.steerMax, self.steerDeltaUp, self.steerDeltaDown)
     trace1.printf1('{}  {}'.format(str_log1, self.str_log2))
 
     if CS.out.cruiseState.modeSel == 0 and self.mode_change_switch == 3:
@@ -318,17 +318,17 @@ class CarController():
     run_speed_ctrl = self.opkr_variablecruise and CS.acc_active and (CS.out.cruiseState.modeSel == 1 or CS.out.cruiseState.modeSel == 2 or CS.out.cruiseState.modeSel == 3)
     if not run_speed_ctrl:
       if CS.out.cruiseState.modeSel == 0:
-        self.steer_mode = "¿ÀÆÄ¸ğµå"
+        self.steer_mode = "ì˜¤íŒŒëª¨ë“œ"
       elif CS.out.cruiseState.modeSel == 1:
-        self.steer_mode = "Â÷°£+Ä¿ºê"
+        self.steer_mode = "ì°¨ê°„+ì»¤ë¸Œ"
       elif CS.out.cruiseState.modeSel == 2:
-        self.steer_mode = "Â÷°£ONLY"
+        self.steer_mode = "ì°¨ê°„ONLY"
       elif CS.out.cruiseState.modeSel == 3:
-        self.steer_mode = "Æíµµ1Â÷¼±"
+        self.steer_mode = "í¸ë„1ì°¨ì„ "
       if CS.out.steerWarning == 0:
-        self.mdps_status = "Á¤»ó"
+        self.mdps_status = "ì •ìƒ"
       elif CS.out.steerWarning == 1:
-        self.mdps_status = "¿À·ù"
+        self.mdps_status = "ì˜¤ë¥˜"
       if CS.lkas_button_on == 0:
         self.lkas_switch = "OFF"
       elif CS.lkas_button_on == 1:
@@ -339,7 +339,7 @@ class CarController():
         self.cruise_gap = CS.cruiseGapSet
 
 
-      str_log2 = 'ÁÖÇà¸ğµå={:s}  MDPS»óÅÂ={:s}  LKAS¹öÆ°={:s}  Å©·çÁî°¸={:1.0f}'.format(self.steer_mode, self.mdps_status, self.lkas_switch, self.cruise_gap)
+      str_log2 = 'ì£¼í–‰ëª¨ë“œ={:s}  MDPSìƒíƒœ={:s}  LKASë²„íŠ¼={:s}  í¬ë£¨ì¦ˆê°­={:1.0f}'.format(self.steer_mode, self.mdps_status, self.lkas_switch, self.cruise_gap)
       trace1.printf2( '{}'.format( str_log2 ) )
 
     if pcm_cancel_cmd and CS.scc12["ACCMode"] != 0 and not CS.out.standstill:
